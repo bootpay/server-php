@@ -1,7 +1,7 @@
 <?php return array(
     'root' => array(
-        'pretty_version' => '1.0.2',
-        'version' => '1.0.2.0',
+        'pretty_version' => '1.0.3',
+        'version' => '1.0.3.0',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,8 +11,8 @@
     ),
     'versions' => array(
         'bootpay/backend-php' => array(
-            'pretty_version' => '1.0.2',
-            'version' => '1.0.2.0',
+            'pretty_version' => '1.0.3',
+            'version' => '1.0.3.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

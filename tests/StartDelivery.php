@@ -23,8 +23,8 @@
     '100': '직접배달',
     '101': '퀵서비스'
  */
-require_once 'vendor/autoload.php'; 
-use \Bootpay\BackendPhp\BootpayApi; 
+require_once '../vendor/autoload.php';
+use Bootpay\BackendPhp\BootpayApi; 
 
 $receiptId = '5c6e0836e13f3371b38f9033';
 

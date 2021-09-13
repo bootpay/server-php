@@ -2,8 +2,8 @@
 /*
  * 결제 검증 관련 예제입니다.
  */
-require_once 'vendor/autoload.php'; 
-use \Bootpay\BackendPhp\BootpayApi; 
+require_once '../vendor/autoload.php';
+use Bootpay\BackendPhp\BootpayApi; 
 
 $price = 3000; // 원래 서버에서 결제하려고 했던 금액
 $receiptId = '5c6dfb1fe13f3371b38f9008';

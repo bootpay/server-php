@@ -2,18 +2,18 @@
 /*
  * 취소 테스트 예제 입니다.
  */
-require_once 'vendor/autoload.php'; 
-use \Bootpay\BackendPhp\BootpayApi; 
+require_once '../vendor/autoload.php';
+use Bootpay\BackendPhp\BootpayApi; 
 
-$receiptId = '[[ receipt_id ]]';
 
 $bootpay = BootpayApi::setConfig(
-    '59bfc738e13f337dbd6ca48a',
-    'pDc0NwlkEX3aSaHTp/PPL/i8vn5E/CqRChgyEp/gHD0=',
-    'development'
+    '5b8f6a4d396fa665fdc2b5ea',
+    'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw='
 );
 
 $response = $bootpay->requestAccessToken();
+
+$receiptId = '[[ receipt_id ]]';
 
 if ($response->status === 200) {
     $result = $bootpay->certificate($receiptId);

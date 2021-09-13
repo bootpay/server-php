@@ -6,9 +6,32 @@
  * Date: 2017. 8. 3.
  * Time: PM 5:37
  */
+
+
+
 class BootpayApi
 {
     use Singleton;
+
+    public const BankCode = [        
+        "한국은행" => "001",
+        "기업은행" => "003",
+        "국민은행" => "004",
+        "외환은행" => "005",
+        "수협은행" => "007",
+        "농협은행" => "011",
+        "우리은행" => "020",
+        "SC은행" => "023",
+        "대구은행" => "031",
+        "부산은행" => "032",
+        "광주은행" => "034",
+        "경남은행" => "039",
+        "우체국" => "071",
+        "KEB하나은행" => "081",
+        "신한은행" => "088",
+        "케이뱅크" => "089",
+        "카카오뱅크" => "090"
+    ];
 
     public $mode = '';
     private $defaultParams = [];
@@ -52,11 +75,11 @@ class BootpayApi
     # price - (선택사항) 부분취소 요청시 금액을 지정, 미지정시 전액 취소 (부분취소가 가능한 PG사, 결제수단에 한해 적용됨)
     # cancel_id - (선택사항) 부분취소 요청시 중복 요청을 방지하기 위한 고유값
     # refund - (선택사항) 가상계좌 환불요청시, 전제조건으로 PG사와 CMS 특약이 체결되어 있을 경우에만 환불요청 가능, 기본적으로 가상계좌는 결제취소가 안됨 
-    #        {
-    #            account: '6756010101234', # 환불받을 계좌번호 
-    #            accountholder: '홍길동', # 환불받을 계좌주
-    #            bankcode: bankcode.dictionary['국민은행'], # 은행 코드 
-    #        }
+    # [
+    #    account: '6756010101234', # 환불받을 계좌번호 
+    #    accountholder: '홍길동', # 환불받을 계좌주
+    #    bankcode: BootpayApi::BankCode['국민은행'] # 은행 코드 
+    # ]
     #
     public static function cancel($receiptId, $price = null, $name = 'API 관리자', $reason = 'API에 의한 요청', $cancelId = null, $taxFree = null, $refund = null)
     {
@@ -76,7 +99,7 @@ class BootpayApi
 
     # 4. 빌링키 발급 
     # user_info # 구매자 모델 설명 
-    # { 
+    # [ 
     #      id: '', # 개발사에서 관리하는 회원 고유 id
     #      username: '', # 구매자 이름
     #      email: '', # 구매자 email
@@ -84,12 +107,12 @@ class BootpayApi
     #      gender: 0 또는 1, # 0:여자, 1:남자
     #      area: '서울', # 서울|인천|대구|광주|부산|울산|경기|강원|충청북도|충북|충청남도|충남|전라북도|전북|전라남도|전남|경상북도|경북|경상남도|경남|제주|세종|대전 중 택 1
     #      birth: '' # 생일 901004
-    # },
+    # ],
     # extra - 빌링키 발급 옵션 
-    # {
+    # [
     #      subscribe_tst_payment: 0, # 100원 결제 후 결제가 되면 billing key를 발행, 결제가 실패하면 에러
     #      raw_data: 0 //PG 오류 코드 및 메세지까지 리턴
-    #  }  
+    #  ]  
     public static function getSubscribeBillingKey($pg, $orderId, $itemName, $cardNo, $cardPw, $expireYear, $expireMonth, $identifyNumber, $userInfo = null, $extra = null)
     {
         $data = [
@@ -109,13 +132,43 @@ class BootpayApi
     }
 
     # 4-1. 발급된 빌링키로 결제 승인 요청 
-    # tax_free - 면세 상품일 경우 해당만큼의 금액을 설정 
-    # interest - 웰컴페이먼츠 전용, 무이자여부를 보내는 파라미터가 있다
-    # quota - 5만원 이상 결제건에 적용하는 할부개월수. 0-일시불, 1은 지정시 에러 발생함, 2-2개월, 3-3개월... 12까지 지정가능
-    # feedback_url - webhook 통지시 받으실 url 주소 (localhost 사용 불가)
-    # feedback_content_type - webhook 통지시 받으실 데이터 타입 (json 또는 urlencoded, 기본값 urlencoded)
-    #####
-    public static function subscribeCardBilling($billingKey, $itemName, $price, $orderId, $optional=null)
+    # optional 선택사항 모델 설명 
+    # {
+    #     items: [], # item 모델 배열 
+    #     userInfo: nil, # user_info 모델 
+    #     extra: nil, # extra 모델 
+    #     tax_free: 0, # 비과세 금액, 면세 상품일 경우 해당만큼의 금액을 설정
+    #     quota: 0,  # int 형태, 5만원 이상 결제건에 적용하는 할부개월수. 0-일시불, 1은 지정시 에러 발생함, 2-2개월, 3-3개월... 12까지 지정가능
+    #     interest: 0 또는 1, # 웰컴페이먼츠 전용, 무이자여부를 보내는 파라미터가 있다
+    #     feedback_url: '', # webhook 통지시 받으실 url 주소 (localhost 사용 불가)
+    #     feedback_content_type: ''  # webhook 통지시 받으실 데이터 타입 (json 또는 urlencoded, 기본값 urlencoded)
+    # }
+    # user_info # 구매자 모델 설명 
+    # { 
+    #             id: '', # 개발사에서 관리하는 회원 고유 id
+    #             username: '', # 구매자 이름
+    #             email: '', # 구매자 email
+    #             phone: '', # 01012341234
+    #             gender: 0 또는 1, # 0:여자, 1:남자
+    #             area: '서울', # 서울|인천|대구|광주|부산|울산|경기|강원|충청북도|충북|충청남도|충남|전라북도|전북|전라남도|전남|경상북도|경북|경상남도|경남|제주|세종|대전 중 택 1
+    #             birth: '' # 생일 901004
+    # },
+    # item 모델 설명
+    # {
+    #   item_name: '', # 상품명
+    #   qty: 1, # 수량
+    #   unique: '', # 상품 고유키
+    #   price: 1000, # 상품단가
+    #   cat1: '', # 카테고리 상
+    #   cat2: '', # 카테고리 중
+    #   cat3: '' # 카테고리 하
+    # }
+    # extra - 빌링키 발급 옵션 
+    # {
+    #   subscribe_tst_payment: 0, # 100원 결제 후 결제가 되면 billing key를 발행, 결제가 실패하면 에러
+    #   raw_data: 0 //PG 오류 코드 및 메세지까지 리턴
+    # }  
+    public static function subscribeCardBilling($billingKey, $orderId, $itemName, $price, $optional=null)
     {
         $data = [
             'billing_key' => $billingKey, # 발급받은 빌링키
@@ -124,14 +177,13 @@ class BootpayApi
             'order_id' => $orderId, # 개발사에서 지정하는 고유주문번호
             'items' => $optional['items'], # 구매할 상품정보, 통계용
             'user_info' => $optional['userInfo'], # 구매자 정보, 특정 PG사의 경우 구매자 휴대폰 번호를 필수로 받는다
-            'extra' => $extra['extra'], # 기타 옵션 
-            'tax_free' => $extra['taxFree'], # 면세 상품일 경우 해당만큼의 금액을 설정
-            'quota' => $extra['quota'], # int 형태, 5만원 이상 결제건에 적용하는 할부개월수. 0-일시불, 1은 지정시 에러 발생함, 2-2개월, 3-3개월... 12까지 지정가능
-            'interest' => $extra['interest'], # 웰컴페이먼츠 전용, 무이자여부를 보내는 파라미터가 있다
-            'feedback_url' => $extra['feedbackUrl'], # webhook 통지시 받으실 url 주소 (localhost 사용 불가)
-            'feedback_content_type' => $extra['feedbackContentType'], # webhook 통지시 받으실 데이터 타입 (json 또는 urlencoded, 기본값 urlencoded)
+            'extra' => $optional['extra'], # 기타 옵션 
+            'tax_free' => $optional['taxFree'], # 면세 상품일 경우 해당만큼의 금액을 설정
+            'quota' => $optional['quota'], # int 형태, 5만원 이상 결제건에 적용하는 할부개월수. 0-일시불, 1은 지정시 에러 발생함, 2-2개월, 3-3개월... 12까지 지정가능
+            'interest' => $optional['interest'], # 웰컴페이먼츠 전용, 무이자여부를 보내는 파라미터가 있다
+            'feedback_url' => $optional['feedbackUrl'], # webhook 통지시 받으실 url 주소 (localhost 사용 불가)
+            'feedback_content_type' => $optional['feedbackContentType'] # webhook 통지시 받으실 데이터 타입 (json 또는 urlencoded, 기본값 urlencoded)
         ];
-
 
         return static::$instances->subscribeCardBillingInstance($data);
     }
@@ -333,17 +385,11 @@ class BootpayApi
     }
 
 
-    public function cancelInstance($receiptId, $price, $name, $reason, $refund)
+    public function cancelInstance($data)
     {
         return self::post(
             implode('/', [$this->getRestUrl(), 'cancel']),
-            [
-                'receipt_id' => $receiptId,
-                'price' => $price,
-                'name' => $name,
-                'reason' => $reason,
-                'refund' => $refund
-            ],
+            $data,
             [
                 "Authorization: {$this->accessToken}"
             ]

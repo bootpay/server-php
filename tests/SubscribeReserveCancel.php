@@ -2,28 +2,19 @@
 /*
  * 카드 정기 결제 예약
  */
-require_once 'vendor/autoload.php'; 
-use \Bootpay\BackendPhp\BootpayApi; 
-
-$billingKey = '5b025b33e13f33310ce560fb';
+require_once '../vendor/autoload.php';
+use Bootpay\BackendPhp\BootpayApi;  
 
 $bootpay = BootpayApi::setConfig(
-    '59bfc738e13f337dbd6ca48a',
-    'pDc0NwlkEX3aSaHTp/PPL/i8vn5E/CqRChgyEp/gHD0='
+    '5b8f6a4d396fa665fdc2b5ea',
+    'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw='
 );
 
 $response = $bootpay->requestAccessToken();
 
-if ($response->status === 200) {
-    $result = $bootpay->subscribeCardBillingReserve([
-        'billing_key' => $billingKey,
-        'item_name' => '정기결제 테스트 아이템',
-        'price' => 3000,
-        'order_id' => time(),
-        'execute_at' => time() + 10,
-        'scheduler_type' => 'oneshot'
-    ]);
-    var_dump($result);
-    $result = $bootpay->subscribeCardBillingReserveCancel($result->data->reserve_id);
+$reserveId = '613af2600199430027b5cb83';
+
+if ($response->status === 200) { 
+    $result = $bootpay->subscribeCardBillingReserveCancel($reserveId);
     var_dump($result);
 }
