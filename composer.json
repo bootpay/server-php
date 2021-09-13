@@ -1,0 +1,23 @@
+{
+    "name": "bootpay/backend-php",
+    "description": "bootpay server side php plugin",
+    "type": "library",
+    "version": "1.0.2",
+    "keywords": ["pg", "BootPay", "paymentgateway", "card", "pay"],
+    "license": "MIT", 
+    "autoload": {
+        "psr-4": {
+            "Bootpay\\BackendPhp\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "authors": [
+        {
+            "name": "bootpay",
+            "email": "bootpay.co.kr@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^5.6.0 || ^7.0"
+    }
+}
