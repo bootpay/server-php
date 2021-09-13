@@ -58,7 +58,7 @@ class BootpayApi
     #            bankcode: bankcode.dictionary['국민은행'], # 은행 코드 
     #        }
     #
-    public static function cancel($receiptId, $price = null, $name = 'API 관리자', $reason = 'API에 의한 요청', $cancelId = time(), $taxFree = null, $refund = null)
+    public static function cancel($receiptId, $price = null, $name = 'API 관리자', $reason = 'API에 의한 요청', $cancelId = null, $taxFree = null, $refund = null)
     {
         $data = [
             'receipt_id' => $receiptId,
@@ -122,14 +122,14 @@ class BootpayApi
             'item_name' => $itemName, # 결제할 상품명
             'price' => $price, # 결제할 상품금액
             'order_id' => $orderId, # 개발사에서 지정하는 고유주문번호
-            'items' =-> $optional['items'], # 구매할 상품정보, 통계용
-            'user_info' =-> $optional['userInfo'], # 구매자 정보, 특정 PG사의 경우 구매자 휴대폰 번호를 필수로 받는다
-            'extra' =-> $extra['extra'], # 기타 옵션 
-            'tax_free' =-> $extra['taxFree'], # 면세 상품일 경우 해당만큼의 금액을 설정
-            'quota' =-> $extra['quota'], # int 형태, 5만원 이상 결제건에 적용하는 할부개월수. 0-일시불, 1은 지정시 에러 발생함, 2-2개월, 3-3개월... 12까지 지정가능
-            'interest' =-> $extra['interest'], # 웰컴페이먼츠 전용, 무이자여부를 보내는 파라미터가 있다
-            'feedback_url' =-> $extra['feedbackUrl'], # webhook 통지시 받으실 url 주소 (localhost 사용 불가)
-            'feedback_content_type' =-> $extra['feedbackContentType'], # webhook 통지시 받으실 데이터 타입 (json 또는 urlencoded, 기본값 urlencoded)
+            'items' => $optional['items'], # 구매할 상품정보, 통계용
+            'user_info' => $optional['userInfo'], # 구매자 정보, 특정 PG사의 경우 구매자 휴대폰 번호를 필수로 받는다
+            'extra' => $extra['extra'], # 기타 옵션 
+            'tax_free' => $extra['taxFree'], # 면세 상품일 경우 해당만큼의 금액을 설정
+            'quota' => $extra['quota'], # int 형태, 5만원 이상 결제건에 적용하는 할부개월수. 0-일시불, 1은 지정시 에러 발생함, 2-2개월, 3-3개월... 12까지 지정가능
+            'interest' => $extra['interest'], # 웰컴페이먼츠 전용, 무이자여부를 보내는 파라미터가 있다
+            'feedback_url' => $extra['feedbackUrl'], # webhook 통지시 받으실 url 주소 (localhost 사용 불가)
+            'feedback_content_type' => $extra['feedbackContentType'], # webhook 통지시 받으실 데이터 타입 (json 또는 urlencoded, 기본값 urlencoded)
         ];
 
 
@@ -173,7 +173,7 @@ class BootpayApi
     #   subscribe_tst_payment: 0, # 100원 결제 후 결제가 되면 billing key를 발행, 결제가 실패하면 에러
     #   raw_data: 0 //PG 오류 코드 및 메세지까지 리턴
     # }  
-    public static function subscribeCardBillingReserve($billingKey, $itemName, $price, $orderId, $executeAt = time() + 10, $optional=null)
+    public static function subscribeCardBillingReserve($billingKey, $itemName, $price, $orderId, $executeAt = null, $optional=null)
     {
         $data = [
             'billing_key' => $billingKey, # 발급받은 빌링키

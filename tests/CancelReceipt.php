@@ -1,9 +1,13 @@
-<?php
+<?php namespace Bootpay\BackendPhp\Tests;
 /*
  * 취소 테스트 예제 입니다.
  */
-require_once '../vendor/autoload.php'; 
+// require_once '../src/BootpayApi.php'; 
+// require_once '../src/Singleton.php'; 
+require_once '../autoload.php'; 
 use Bootpay\BackendPhp\BootpayApi; 
+
+var_dump('2134');
 
 $receiptId = '주문번호';
 
