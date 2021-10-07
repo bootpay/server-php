@@ -1,7 +1,5 @@
 <?php
-/*
- * 취소 테스트 예제 입니다.
- */
+
 require_once '../vendor/autoload.php';
 use Bootpay\BackendPhp\BootpayApi; 
 
