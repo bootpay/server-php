@@ -11,5 +11,8 @@ BootpayApi::setConfiguration(
     'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U='
 );
 
-$response = BootpayApi::getAccessToken();
-var_dump($response);
+$token = BootpayApi::getAccessToken();
+if (!$token->error_code) {
+    $response = BootpayApi::receiptPayment('61b009aaec81b4057e7f6ecd');
+    var_dump($response);
+}

@@ -14,9 +14,9 @@ BootpayApi::setConfiguration(
 $token = BootpayApi::getAccessToken();
 if (!$token->error_code) {
     try {
-        $response = BootpayApi::certificate('625783a6cf9f6d001d0aed19');
-        var_dump($response);
+        $response = BootpayApi::destroyBillingKey('62591a5dd01c7e002219e255');
     } catch (Exception $e) {
         echo($e->getMessage());
     }
+    var_dump($response);
 }

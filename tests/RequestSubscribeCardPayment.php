@@ -14,9 +14,15 @@ BootpayApi::setConfiguration(
 $token = BootpayApi::getAccessToken();
 if (!$token->error_code) {
     try {
-        $response = BootpayApi::certificate('625783a6cf9f6d001d0aed19');
-        var_dump($response);
+        $response = BootpayApi::requestSubscribeCardPayment(array(
+            'billing_key' => '62591a5dd01c7e002219e255',
+            'order_name' => '테스트결제',
+            'price' => 1000,
+            'order_id' => time()
+        ));
     } catch (Exception $e) {
         echo($e->getMessage());
     }
+    //62591a5dd01c7e002219e255
+    var_dump($response);
 }

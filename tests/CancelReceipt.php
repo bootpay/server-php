@@ -1,34 +1,36 @@
-<?php 
+<?php
 /*
- * 취소 테스트 예제 입니다.
- */ 
+ * Access Token 요청 예제입니다.
+ */
 require_once '../vendor/autoload.php';
-use Bootpay\BackendPhp\BootpayApi; 
 
+use Bootpay\BackendPhp\BootpayApi;
 
-$bootpay = BootpayApi::setConfig(
-    '5b8f6a4d396fa665fdc2b5ea',
-    'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw='
+BootpayApi::setConfiguration(
+    '59b731f084382614ebf72215',
+    'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U='
 );
 
-$response = $bootpay->requestAccessToken();
-
-$receiptId = '613f101f0d681b0023e6e53f';
-
-if ($response->status === 200) { 
-    // $result = $bootpay->cancel($receiptId);
-    $result = $bootpay->cancel(
-        $receiptId, 
-        null, 
-        'API 관리자',
-        'API에 의한 요청',
-        time(),
-        null,
-        [
-            'account' => '66569112432134',
-            'accountholder' => '홍길동',
-            'bankcode' => BootpayApi::BankCode['국민은행']
-        ]
-    );
-    var_dump($result);
+$token = BootpayApi::getAccessToken();
+if (!$token->error_code) {
+    try {
+        $response = BootpayApi::cancelPayment(
+            array(
+                'receipt_id' => '62591cfcd01c7e001c19e259',
+                'cancel_price' => 1000,
+                'cancel_tax_free' => '0',
+                'cancel_id' => null,
+                'cancel_username' => 'test',
+                'cancel_message' => '테스트 결제 취소',
+                'refund' => array(
+                    'bank_account' => '',
+                    'bank_username' => '',
+                    'bank_code' => ''
+                )
+            )
+        );
+        var_dump($response);
+    } catch (Exception $e) {
+        echo($e->getMessage());
+    }
 }

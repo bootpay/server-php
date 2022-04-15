@@ -11,5 +11,12 @@ BootpayApi::setConfiguration(
     'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U='
 );
 
-$response = BootpayApi::getAccessToken();
-var_dump($response);
+$token = BootpayApi::getAccessToken();
+if (!$token->error_code) {
+    try {
+        $response = BootpayApi::confirmPayment('[ receipt_id ]');
+        var_dump($response);
+    } catch (Exception $e) {
+        echo($e->getMessage());
+    }
+}

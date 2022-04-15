@@ -14,9 +14,12 @@ BootpayApi::setConfiguration(
 $token = BootpayApi::getAccessToken();
 if (!$token->error_code) {
     try {
-        $response = BootpayApi::certificate('625783a6cf9f6d001d0aed19');
-        var_dump($response);
+        $response = BootpayApi::requestUserToken(array(
+            'user_id' => 'gosomi1'
+        ));
     } catch (Exception $e) {
         echo($e->getMessage());
     }
+    //62591a5dd01c7e002219e255
+    var_dump($response);
 }
