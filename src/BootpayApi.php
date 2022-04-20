@@ -258,4 +258,25 @@ class BootpayApi
             $userTokenParameters
         );
     }
+
+    /**
+     * Subscribe Payment Reserve
+     * Comment by GOSOMI
+     * @date: 2022-04-20
+     * @throws \Exception
+     */
+    public static function subscribePaymentReserve($reserveParameters)
+    {
+        if (!$reserveParameters['billing_key']) {
+            return self::exception('예약 자동결제 사용할 빌링키를 입력해주세요.');
+        }
+        if (!$reserveParameters['reserve_execute_at']) {
+            return self::exception('예약 자동결제를 실행할예정 시간을 입력해주세요.');
+        }
+        return self::request(
+            'POST',
+            'subscribe/payment/reserve',
+            $reserveParameters
+        );
+    }
 }
