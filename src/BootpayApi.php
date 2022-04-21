@@ -262,7 +262,6 @@ class BootpayApi
     /**
      * Subscribe Payment Reserve
      * Comment by GOSOMI
-     * @date: 2022-04-20
      * @throws \Exception
      */
     public static function subscribePaymentReserve($reserveParameters)
@@ -277,6 +276,19 @@ class BootpayApi
             'POST',
             'subscribe/payment/reserve',
             $reserveParameters
+        );
+    }
+
+    /**
+     * Cancel Subscribe Reserve
+     * Comment by GOSOMI
+     * @throws \Exception
+     */
+    public static function cancelSubscribeReserve($reserveId)
+    {
+        return self::request(
+            'DELETE',
+            'subscribe/payment/reserve/' . $reserveId
         );
     }
 }
