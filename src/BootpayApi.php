@@ -291,4 +291,19 @@ class BootpayApi
             'subscribe/payment/reserve/' . $reserveId
         );
     }
+
+    /**
+     * Shipping Start
+     * Comment by GOSOMI
+     * @date: 2022-06-15
+     * @throws \Exception
+     */
+    public static function shippingStart($shippingParameters)
+    {
+        return self::request(
+            'PUT',
+            'escrow/shipping/start/' . $shippingParameters['receipt_id'],
+            $shippingParameters
+        );
+    }
 }
