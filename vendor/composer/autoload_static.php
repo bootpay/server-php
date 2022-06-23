@@ -9,17 +9,17 @@ class ComposerStaticInita530fdab98b95fc220fbc2685e9a36cb
     public static $prefixLengthsPsr4 = array (
         'B' => 
         array (
-            'Bootpay\\BackendPhp\\Test\\' => 24,
-            'Bootpay\\BackendPhp\\' => 19,
+            'Bootpay\\ServerPhp\\Test\\' => 23,
+            'Bootpay\\ServerPhp\\' => 18,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'Bootpay\\BackendPhp\\Test\\' => 
+        'Bootpay\\ServerPhp\\Test\\' => 
         array (
             0 => __DIR__ . '/../..' . '/tests',
         ),
-        'Bootpay\\BackendPhp\\' => 
+        'Bootpay\\ServerPhp\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),

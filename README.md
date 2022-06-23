@@ -35,7 +35,7 @@ PHP 언어로 작성된 어플리케이션, 프레임워크 등에서 사용가�
 
 
 ```php
-composer require bootpay/backend-php
+composer require bootpay/server-php
 ```
 
 
@@ -45,7 +45,7 @@ composer require bootpay/backend-php
 <?php
 require_once '../vendor/autoload.php';
 
-use Bootpay\BackendPhp\BootpayApi;
+use Bootpay\ServerPhp\BootpayApi;
 
 BootpayApi::setConfiguration(
     '59b731f084382614ebf72215',

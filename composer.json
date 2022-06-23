@@ -1,18 +1,18 @@
 {
-    "name": "bootpay/backend-php",
-    "description": "bootpay server side php plugin",
+    "name": "bootpay/server-php",
+    "description": "bootpay server side php plugin for v2 api",
     "type": "library",
     "version": "2.0.0",
     "keywords": ["pg", "BootPay", "paymentgateway", "card", "pay"],
     "license": "MIT", 
     "autoload": {
         "psr-4": {
-            "Bootpay\\BackendPhp\\": "src/"
+            "Bootpay\\ServerPhp\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Bootpay\\BackendPhp\\Test\\": "tests/"
+            "Bootpay\\ServerPhp\\Test\\": "tests/"
         }
     },
     "minimum-stability": "dev",

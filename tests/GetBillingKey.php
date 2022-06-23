@@ -13,14 +13,18 @@ BootpayApi::setConfiguration(
 );
 
 
-$token = BootpayApi::getAccessToken();
+$token = BootpayApi::getAccessToken(); 
 if (!$token->error_code) {
     try {
-        $response = BootpayApi::subscribePaymentReserve(array(
-            'billing_key' => '62b41f88cf9f6d001ad212ad',
-            'order_name' => '테스트결제',
-            'price' => 1000,
-            'order_id' => time(),
+        $response = BootpayApi::requestSubscribeBillingKey(array(
+            'pg' => '나이스페이',
+            'order_name' => '테스트결제', 
+            'subscription_id' => time(),
+            'card_no' => '5570420456641074', //카드번호 
+            'card_pw' => '83', //카드 비밀번호 2자리 
+            'card_identity_no' => '861014',  //카드 소유주 생년월일 6자리 
+            'card_expire_year' => '26',  //카드 유효기간 년 2자리 
+            'card_expire_month' => '12', //카드 유효기간 월 2자리 
             'user' => array(
                 'phone' => '01000000000',
                 'username' => '홍길동',
@@ -28,11 +32,7 @@ if (!$token->error_code) {
             ),
             'reserve_execute_at' => date("Y-m-d H:i:s \U\T\C", time() + 5)
         ));
-         
-        if (!$response->error_code) {
-            $cancel = BootpayApi::cancelSubscribeReserve($response->reserve_id);
-            var_dump($cancel);
-        }
+        var_dump($response);
     } catch (Exception $e) {
         echo($e->getMessage());
     }
