@@ -9,22 +9,27 @@ PHP 언어로 작성된 어플리케이션, 프레임워크 등에서 사용가�
 
 
 ## 기능   
-1. (부트페이 통신을 위한) 토큰 발급 요청   
-2. 결제 검증   
+1. (부트페이 통신을 위한) 토큰 발급
+2. 결제 단건 조회 
 3. 결제 취소 (전액 취소 / 부분 취소)
-4. 빌링키 발급
-   
-    4-1. 발급된 빌링키로 결제 승인 요청
-   
-    4-2. 발급된 빌링키로 결제 승인 예약 요청
-   
-    4-2-1. 발급된 빌링키로 결제 승인 예약 - 취소 요청
-   
-    4-3. 빌링키 삭제
-5. (부트페이 단독) 사용자 토큰 발급   
-6. (부트페이 단독) 결제 링크 생성   
-7. 서버 승인 요청   
-8. 본인 인증 결과 조회
+4. 신용카드 자동결제 (빌링결제)
+
+   4-1. 빌링키 발급
+
+   4-2. 발급된 빌링키로 결제 승인 요청
+
+   4-3. 발급된 빌링키로 결제 예약 요청
+
+   4-4. 발급된 빌링키로 결제 예약 - 취소 요청
+
+   4-5. 빌링키 삭제
+
+   4-6. 빌링키 조회
+
+5. (생체인증, 비밀번호 결제를 위한) 구매자 토큰 발급
+6. 서버 승인 요청
+7. 본인 인증 결과 조회
+8. (에스크로 이용시) PG사로 배송정보 보내기
 
 ## composer로 설치하기 
 
@@ -38,35 +43,47 @@ composer require bootpay/backend-php
 
 ```php
 <?php
-require_once '../vendor/autoload.php'; 
-use Bootpay\BackendPhp\BootpayApi; 
+require_once '../vendor/autoload.php';
 
-$bootpay = BootpayApi::setConfig(
-    '5b8f6a4d396fa665fdc2b5ea',
-    'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw='
+use Bootpay\BackendPhp\BootpayApi;
+
+BootpayApi::setConfiguration(
+    '59b731f084382614ebf72215',
+    'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U='
 );
 
-$response = $bootpay->requestAccessToken();
+$response = BootpayApi::getAccessToken();
 var_dump($response);
 ```
 함수 단위의 샘플 코드는 [이곳](https://github.com/bootpay/backend-php/tree/main/tests)을 참조하세요.
 
 
-## 1. 토큰 발급 
+## 1. (부트페이 통신을 위한) 토큰 발급
 
 부트페이와 서버간 통신을 하기 위해서는 부트페이 서버로부터 토큰을 발급받아야 합니다.  
 발급된 토큰은 30분간 유효하며, 최초 발급일로부터 30분이 지날 경우 토큰 발급 함수를 재호출 해주셔야 합니다.
 ```php 
+$bootpay = BootpayApi::setConfig(
+    '5b8f6a4d396fa665fdc2b5ea',
+    'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw='
+);
 $response = $bootpay->requestAccessToken();
+
 var_dump($response);
 ```
 
 
-## 2. 결제 검증 
+## 2. 결제 단건 조회 
 결제창 및 정기결제에서 승인/취소된 결제건에 대하여 올바른 결제건인지 서버간 통신으로 결제검증을 합니다.
 ```php  
+$bootpay = BootpayApi::setConfig(
+    '5b8f6a4d396fa665fdc2b5ea',
+    'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw='
+);
+$response = $bootpay->requestAccessToken();
+
 $receiptId = '612c31000199430036b5165d';
-$response = $bootpay->verify($receiptId);
+$response = $bootpay->receiptPayment($receiptId);
 var_dump($response);
 ```
 
@@ -82,117 +99,218 @@ price를 지정하지 않으면 전액취소 됩니다.
 
 간혹 개발사에서 실수로 여러번 부분취소를 보내서 여러번 취소되는 경우가 있기때문에, 부트페이에서는 부분취소 중복 요청을 막기 위해 cancel_id 라는 필드를 추가했습니다. cancel_id를 지정하시면, 해당 건에 대해 중복 요청방지가 가능합니다.  
 ```php  
-$response = $bootpay->cancel(
-    '613f101f0d681b0023e6e53f', 
-    null, 
-    'API 관리자',
-    'API에 의한 요청',
-    time(),
-    null,
-    [
-        'account' => '66569112432134',
-        'accountholder' => '홍길동',
-        'bankcode' => BootpayApi::BankCode['국민은행']
-    ]
+$bootpay = BootpayApi::setConfig(
+    '5b8f6a4d396fa665fdc2b5ea',
+    'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw='
 );
-var_dump($response);
+$response = $bootpay->requestAccessToken();
+
+$token = BootpayApi::getAccessToken();
+if (!$token->error_code) {
+    try {
+        $response = BootpayApi::cancelPayment(
+            array(
+                'receipt_id' => '62591cfcd01c7e001c19e259',
+                'cancel_price' => 1000,
+                'cancel_tax_free' => '0',
+                'cancel_id' => null,
+                'cancel_username' => 'test',
+                'cancel_message' => '테스트 결제 취소',
+                'refund' => array(
+                    'bank_account' => '',
+                    'bank_username' => '',
+                    'bank_code' => ''
+                )
+            )
+        );
+        var_dump($response);
+    } catch (Exception $e) {
+        echo($e->getMessage());
+    }
+}
 ```
 
-## 4. 빌링키 발급 
+## 4-1. 빌링키 발급
 REST API 방식으로 고객으로부터 카드 정보를 전달하여, PG사에게 빌링키를 발급받을 수 있습니다. 
 발급받은 빌링키를 저장하고 있다가, 원하는 시점, 원하는 금액에 결제 승인 요청하여 좀 더 자유로운 결제시나리오에 적용이 가능합니다.
 * 비인증 정기결제(REST API) 방식을 지원하는 PG사만 사용 가능합니다. 
 ```php  
-$response = $bootpay->getSubscribeBillingKey(
-    'nicepay',
-    time(),
-    '30일 정기권 결제', 
-    '카드 번호',
-    '카드 비밀번호 앞에 2자리',
-    '카드 만료 연도 2자리',
-    '카드 만료 월 2자리',
-    '주민등록번호 또는 사업자번호'
-); 
+$bootpay = BootpayApi::setConfig(
+    '5b8f6a4d396fa665fdc2b5ea',
+    'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw='
+);
+$response = $bootpay->requestAccessToken();
 
-var_dump($response); 
+$token = BootpayApi::getAccessToken();
+if (!$token->error_code) {
+    try {
+        $response = $bootpay->getSubscribeBillingKey(
+            'nicepay',
+            time(),
+            '30일 정기권 결제', 
+            '카드 번호',
+            '카드 비밀번호 앞에 2자리',
+            '카드 만료 연도 2자리',
+            '카드 만료 월 2자리',
+            '주민등록번호 또는 사업자번호'
+        ); 
+
+        var_dump($response); 
+    } catch (Exception $e) {
+        echo($e->getMessage());
+    }
+}
+
+
 ```
 
-## 4-1. 발급된 빌링키로 결제 승인 요청  
+## 4-2. 발급된 빌링키로 결제 승인 요청  
 발급된 빌링키로 원하는 시점에 원하는 금액으로 결제 승인 요청을 할 수 있습니다. 잔액이 부족하거나 도난 카드 등의 특별한 건이 아니면 PG사에서 결제를 바로 승인합니다.
 
 ```php   
-$response = $bootpay->subscribeCardBilling(
-    '613af2600199430027b5cb83',
-    time(),
-    '정기결제 테스트 아이템',
-    1000
+BootpayApi::setConfiguration(
+    '59b731f084382614ebf72215',
+    'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U='
 );
 
-var_dump($response); 
+$token = BootpayApi::getAccessToken();
+if (!$token->error_code) {
+    try {
+        $response = BootpayApi::requestSubscribeCardPayment(array(
+            'billing_key' => '62591a5dd01c7e002219e255',
+            'order_name' => '테스트결제',
+            'price' => 1000,
+            'order_id' => time()
+        ));
+    } catch (Exception $e) {
+        echo($e->getMessage());
+    }
+    //62591a5dd01c7e002219e255
+    var_dump($response);
+}
 ```
-## 4-2. 발급된 빌링키로 결제 예약 요청
-원하는 시점에 4-1로 결제 승인 요청을 보내도 되지만, 빌링키 발급 이후에 바로 결제 예약 할 수 있습니다. (빌링키당 최대 5건)
+## 4-3. 발급된 빌링키로 결제 예약 요청
+원하는 시점에 4-1로 결제 승인 요청을 보내도 되지만, 빌링키 발급 이후에 바로 결제 예약 할 수 있습니다. (빌링키당 최대 10건)
 ```php   
-$response = $bootpay->subscribeCardBillingReserve(
-    '613af2600199430027b5cb83',
-    time(),
-    '정기결제 테스트 아이템',
-    1000,
-    time() + 10
-); 
+BootpayApi::setConfiguration(
+    '59b731f084382614ebf72215',
+    'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U='
+);
 
-var_dump($response);
+$token = BootpayApi::getAccessToken();
+if (!$token->error_code) {
+    try {
+        $response = BootpayApi::subscribePaymentReserve(array(
+            'billing_key' => '[ 빌링키 ]',
+            'order_name' => '테스트결제',
+            'price' => 1000,
+            'order_id' => time(),
+            'user' => array(
+                'phone' => '01000000000',
+                'username' => '홍길동',
+                'email' => 'test@bootpay.co.kr'
+            ),
+            'reserve_execute_at' => date("Y-m-d H:i:s \U\T\C", time() + 5)
+        ));
+    } catch (Exception $e) {
+        echo($e->getMessage());
+    }
+    //62591a5dd01c7e002219e255
+    var_dump($response);
+}
 ```
-## 4-2-1. 발급된 빌링키로 결제 예약 - 취소 요청 
-빌링키로 예약된 결제건을 취소합니다. 
+## 4-4. 발급된 빌링키로 결제 예약 - 취소 요청
+빌링키로 예약된 결제건을 취소합니다.
 ```php   
-$response = $bootpay->subscribeBillingReserveCancel(
-    '613af2600199430027b5cb83'
-); 
+BootpayApi::setConfiguration(
+    '59b731f084382614ebf72215',
+    'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U='
+);
 
-var_dump($response);
+$token = BootpayApi::getAccessToken();
+if (!$token->error_code) {
+    try {
+        $response = BootpayApi::subscribePaymentReserve(array(
+            'billing_key' => '[ 빌링키 ]',
+            'order_name' => '테스트결제',
+            'price' => 1000,
+            'order_id' => time(),
+            'user' => array(
+                'phone' => '01000000000',
+                'username' => '홍길동',
+                'email' => 'test@bootpay.co.kr'
+            ),
+            'reserve_execute_at' => date("Y-m-d H:i:s \U\T\C", time() + 5)
+        ));
+        if (!$response->error_code) {
+            $cancel = BootpayApi::cancelSubscribeReserve($response->reserve_id);
+            var_dump($cancel);
+        }
+    } catch (Exception $e) {
+        echo($e->getMessage());
+    }
+}
 ```
-## 4-3. 빌링키 삭제 
+## 4-5. 빌링키 삭제 
 발급된 빌링키로 더 이상 사용되지 않도록, 삭제 요청합니다.
 ```php  
-$response = $bootpay->deleteBillingKey(
-    '613af2600199430027b5cb83'
-); 
+BootpayApi::setConfiguration(
+    '59b731f084382614ebf72215',
+    'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U='
+);
 
-var_dump($response);
+$token = BootpayApi::getAccessToken();
+if (!$token->error_code) {
+    try {
+        $response = BootpayApi::destroyBillingKey('62591a5dd01c7e002219e255');
+    } catch (Exception $e) {
+        echo($e->getMessage());
+    }
+    var_dump($response);
+}
 ```
+
+## 4-6. 빌링키 조회
+(빌링키 발급 완료시 리턴받았던 receipt_id에 한정) 어떤 빌링키였는지 조회합니다. 
+```php  
+BootpayApi::setConfiguration(
+    '59b731f084382614ebf72215',
+    'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U='
+);
+
+$token = BootpayApi::getAccessToken();
+if (!$token->error_code) {
+    $response = BootpayApi::lookupSubscribeBillingKey('6257989ecf9f6d001d0aed1b');
+    var_dump($response);
+}
+```
+
+
 ## 5. 사용자 토큰 발급 
 (부트페이 단독) 부트페이에서 제공하는 간편결제창, 생체인증 기반의 결제 사용을 위해서는 개발사에서 회원 고유번호를 관리해야하며, 해당 회원에 대한 사용자 토큰을 발급합니다.
 이 토큰값을 기반으로 클라이언트에서 결제요청 하시면 되겠습니다.
 ```php   
-$response = $bootpay->getUserToken(
-    'user1234', # 필수
-    '01012341234', # 선택
-    'rupy1014@gmail.com', # 선택
-    '홍길동', # 선택
-    1, # 선택
-    '861014' # 선택
+BootpayApi::setConfiguration(
+    '59b731f084382614ebf72215',
+    'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U='
 );
 
-var_dump($response);
-```
-## 6. 결제 링크 생성 
-(부트페이 단독) 요청 하시면 결제링크가 리턴되며, 해당 url을 고객에게 안내, 결제 유도하여 결제를 진행할 수 있습니다. 
-```php  
-$response = $bootpay->requestPayment(
-    time(),
-    '테스트 부트페이 상품',
-    1000,
-    [
-        'pg' => 'nicepay',
-        // 'method' => 'card',
-        'methods' => ['card', 'phone', 'bank', 'vbank'],
-    ]
-); 
-var_dump($response);
-```
+$token = BootpayApi::getAccessToken();
+if (!$token->error_code) {
+    try {
+        $response = BootpayApi::requestUserToken(array(
+            'user_id' => 'gosomi1',
+            'phone' => '01012345678'
+        ));
+    } catch (Exception $e) {
+        echo($e->getMessage());
+    }
+    //62591a5dd01c7e002219e255
+    var_dump($response);
+}
+``` 
 
-## 7. 서버 승인 요청 
+## 6. 서버 승인 요청 
 결제승인 방식은 클라이언트 승인 방식과, 서버 승인 방식으로 총 2가지가 있습니다.
 
 클라이언트 승인 방식은 javascript나 native 등에서 confirm 함수에서 진행하는 일반적인 방법입니다만, 경우에 따라 서버 승인 방식이 필요할 수 있습니다.
@@ -202,22 +320,73 @@ var_dump($response);
 2. 단일 트랜잭션의 개념이 필요할 경우 - 재고파악이 중요한 커머스를 운영할 경우 트랜잭션 개념이 필요할 수 있겠으며, 이를 위해서는 서버 승인을 사용해야 합니다. 
 
 ```php   
-$price = 3000; // 원래 서버에서 결제하려고 했던 금액
-$receiptId = '5c6dfb1fe13f3371b38f9008';
-$result = $bootpay->verify($receiptId);
-// 서버에서 200을 받고, 원래 결제하려고 했던 금액과 일치하면 서버에 submit을 보냅니다.
-if ($result->status == 200 && $result->data->price == $price) {
-    $receiptData = $bootpay->submit($receiptId);
-    var_dump($receiptData);
+BootpayApi::setConfiguration(
+    '59b731f084382614ebf72215',
+    'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U='
+);
+
+$token = BootpayApi::getAccessToken();
+if (!$token->error_code) {
+    try {
+        $response = BootpayApi::confirmPayment('[ receipt_id ]');
+        var_dump($response);
+    } catch (Exception $e) {
+        echo($e->getMessage());
+    }
 }
 ```
 
-## 8. 본인 인증 결과 조회 
+## 7. 본인 인증 결과 조회 
 다날 본인인증 후 결과값을 조회합니다. 
 다날 본인인증에서 통신사, 외국인여부, 전화번호 이 3가지 정보는 다날에 추가로 요청하셔야 받으실 수 있습니다.
 ```php 
-$result = $bootpay->certificate('613af2600199430027b5cb83');
-var_dump($result);
+BootpayApi::setConfiguration(
+    '59b731f084382614ebf72215',
+    'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U='
+);
+
+$token = BootpayApi::getAccessToken();
+if (!$token->error_code) {
+    try {
+        $response = BootpayApi::certificate('625783a6cf9f6d001d0aed19');
+        var_dump($response);
+    } catch (Exception $e) {
+        echo($e->getMessage());
+    }
+}
+```
+
+8. (에스크로 이용시) PG사로 배송정보 보내기
+현금 거래에 한해 구매자의 안전거래를 보장하는 방법으로, 판매자와 구매자의 온라인 전자상거래가 원활하게 이루어질 수 있도록 중계해주는 매매보호서비스입니다. 국내법에 따라 전자상거래에서 반드시 적용이 되어 있어야합니다. PG에서도 에스크로 결제를 지원하며, 에스크로 결제 사용을 원하시면 PG사 가맹시에 에스크로결제를 미리 얘기하고나서 진행을 하시는 것이 수월합니다.
+
+PG사로 배송정보( 이니시스, KCP만 지원 )를 보내서 에스크로 상태를 변경하는 API 입니다.
+```php 
+BootpayApi::setConfiguration(
+    '59b731f084382614ebf72215',
+    'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U='
+);
+
+$token = BootpayApi::getAccessToken();
+if (!$token->error_code) {
+    try {
+        $response = BootpayApi::shippingStart(
+            array(
+                'receipt_id' => "62a95891d01c7e001d7dc20b",
+                'tracking_number' => '3982983',
+                'delivery_corp' => 'CJ대한통운',
+                'user' => array(
+                    'username' => '테스트',
+                    'phone' => '01000000000',
+                    'zipcode' => '099382',
+                    'address' => '서울특별시 종로구'
+                )
+            )
+        );
+        var_dump($response);
+    } catch (Exception $e) {
+        echo($e->getMessage());
+    }
+}
 ```
 
 ## Example 프로젝트
@@ -226,7 +395,7 @@ var_dump($result);
 
 ## Documentation
 
-[부트페이 개발매뉴얼](https://bootpay.gitbook.io/docs/)을 참조해주세요
+[부트페이 개발매뉴얼](https://docs.bootpay.co.kr/next/)을 참조해주세요
 
 ## 기술문의
 

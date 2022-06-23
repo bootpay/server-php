@@ -15,7 +15,8 @@ $token = BootpayApi::getAccessToken();
 if (!$token->error_code) {
     try {
         $response = BootpayApi::requestUserToken(array(
-            'user_id' => 'gosomi1'
+            'user_id' => 'gosomi1',
+            'phone' => '01012345678'
         ));
     } catch (Exception $e) {
         echo($e->getMessage());
