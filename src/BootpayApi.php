@@ -1,10 +1,10 @@
 <?php
 
-namespace Bootpay\BackendPhp;
+namespace Bootpay\ServerPhp;
 
 class BootpayApi
 {
-    static $token = null;
+    static $token = '';
     private static $applicationId = '';
     private static $privateKey = '';
     private static $mode = 'production';
