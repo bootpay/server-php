@@ -2,7 +2,7 @@
     "name": "bootpay/server-php",
     "description": "bootpay server side php plugin for v2 api",
     "type": "library",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "keywords": ["pg", "BootPay", "paymentgateway", "card", "pay"],
     "license": "MIT", 
     "autoload": {
