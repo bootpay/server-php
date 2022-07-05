@@ -2,8 +2,8 @@
 /*
  * Access Token 요청 예제입니다.
  */
-require_once '../vendor/autoload.php';
-// require_once __DIR__.'/../src/BootpayApi.php'; 
+// require_once '../vendor/autoload.php';
+require_once __DIR__.'/../src/BootpayApi.php';
 
 use Bootpay\ServerPhp\BootpayApi;
 

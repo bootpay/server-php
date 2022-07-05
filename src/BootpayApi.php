@@ -88,9 +88,14 @@ class BootpayApi
                 'private_key' => self::$privateKey
             )
         );
-        if (!$response->error_code) {
+        $response = null;
+        if(!isset($response->error_code)){
             self::$token = $response->access_token;
         }
+
+//         if (!$response->error_code) {
+//             self::$token = $response->access_token;
+//         }
         return $response;
     }
 
