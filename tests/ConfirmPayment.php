@@ -14,7 +14,7 @@ BootpayApi::setConfiguration(
 
 
 $token = BootpayApi::getAccessToken();
-if (!$token->error_code) {
+if (!isset($token->error_code)) {
     try {
         $response = BootpayApi::confirmPayment('62b4200acf9f6d001ad212b1');
         var_dump($response);

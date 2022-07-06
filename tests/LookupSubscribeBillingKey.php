@@ -14,7 +14,7 @@ BootpayApi::setConfiguration(
 
 
 $token = BootpayApi::getAccessToken();
-if (!$token->error_code) {
+if (!isset($token->error_code)) {
     $response = BootpayApi::lookupSubscribeBillingKey('62b41f68cf9f6d001ad212a5');
     var_dump($response);
 }

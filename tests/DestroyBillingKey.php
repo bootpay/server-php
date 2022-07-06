@@ -14,7 +14,7 @@ BootpayApi::setConfiguration(
 
 
 $token = BootpayApi::getAccessToken();
-if (!$token->error_code) {
+if (!isset($token->error_code)) {
     try {
         $response = BootpayApi::destroyBillingKey('62b41f88cf9f6d001ad212ad');
     } catch (Exception $e) {

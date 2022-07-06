@@ -13,10 +13,11 @@ BootpayApi::setConfiguration(
 );
 
 
-$token = BootpayApi::getAccessToken();
-if (!$token->error_code) {
+$token = BootpayApi::getAccessToken(); 
+
+if (!isset($token->error_code)) {
     try {
-        $response = BootpayApi::certificate('625783a6cf9f6d001d0aed19');
+        $response = BootpayApi::certificate('62c4ea8cd01c7e001fb4d956');
         var_dump($response);
     } catch (Exception $e) {
         echo($e->getMessage());

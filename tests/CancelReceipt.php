@@ -14,8 +14,10 @@ BootpayApi::setConfiguration(
 
 $token = BootpayApi::getAccessToken();
 // var_dump($token);
-
-if (!$token->error_code) {
+// if(!isset($response->error_code)){
+//     self::$token = $response->access_token;
+// }
+if (!isset($token->error_code)) {
     try {
         $response = BootpayApi::cancelPayment(
             array(

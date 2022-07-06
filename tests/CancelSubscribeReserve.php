@@ -14,7 +14,7 @@ BootpayApi::setConfiguration(
 
 
 $token = BootpayApi::getAccessToken();
-if (!$token->error_code) {
+if (!isset($token->error_code)) {
     try {
         $response = BootpayApi::subscribePaymentReserve(array(
             'billing_key' => '62b41f88cf9f6d001ad212ad',
