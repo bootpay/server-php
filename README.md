@@ -53,7 +53,7 @@ BootpayApi::setConfiguration(
 );
 
 $response = BootpayApi::getAccessToken();
-if (!$token->error_code) { 
+if (!isset($token->error_code)) { 
     //토큰 발급 성공
     var_dump($response);
 }
@@ -70,7 +70,7 @@ if (!$token->error_code) {
 $token = BootpayApi::getAccessToken();
 var_dump($response);
 
-if ($token->error_code) { 
+if (isset($token->error_code)) { 
     //토큰 발급 실패
     return;
 }
