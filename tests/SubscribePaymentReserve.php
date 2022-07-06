@@ -13,7 +13,8 @@ BootpayApi::setConfiguration(
 );
 
 
-$token = BootpayApi::getAccessToken();
+$token = BootpayApi::getAccessToken(); 
+
 if (!isset($token->error_code)) {
     try {
         $response = BootpayApi::subscribePaymentReserve(array(

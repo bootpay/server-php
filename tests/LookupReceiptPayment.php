@@ -14,6 +14,13 @@ BootpayApi::setConfiguration(
 
 
 $token = BootpayApi::getAccessToken();
+
+if(isset($token->access_token)) {
+    // Access Token 발급
+    var_dump($token);
+ }
+
+
 if (!isset($token->error_code)) {
     $response = BootpayApi::receiptPayment('62c4ea8cd01c7e001fb4d956');
     var_dump($response);
