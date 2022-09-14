@@ -14,6 +14,8 @@ class BootpayApi
         'production' => 'https://api.bootpay.co.kr/v2'
     );
     private static $postMethods = array('POST', 'PUT');
+    private static $apiVersion = '4.2.0';
+    private static $sdkVersion = '2.0.1';
 
     private static function entrypoints($url)
     {
@@ -32,7 +34,10 @@ class BootpayApi
         return array_merge($headers, array(
             'Content-Type: application/json',
             'Accept: application/json',
-            'Authorization: ' . (strlen(self::$token) ? "Bearer " . self::$token : null)
+            'Authorization: ' . (strlen(self::$token) ? "Bearer " . self::$token : null),
+            'BOOTPAY-API-VERSION: ' . self::$apiVersion,
+            'BOOTPAY-SDK-VERSION: ' . self::$sdkVersion,
+            'BOOTPAY-SDK-TYPE: 303'
         ));
     }
 
@@ -55,7 +60,7 @@ class BootpayApi
         $errno = curl_errno($channel);
         $errMsg = curl_error($channel);
         if ($errno) {
-            throw new Exception('error: ' . $errno . ', msg: ' . $errMsg);
+            throw new \Exception('error: ' . $errno . ', msg: ' . $errMsg);
         }
         curl_close($channel);
         $json = json_decode(trim($response));
@@ -88,13 +93,9 @@ class BootpayApi
                 'private_key' => self::$privateKey
             )
         );
-        if(!isset($response->error_code)){
+        if (!isset($response->error_code)) {
             self::$token = $response->access_token;
         }
-
-//         if (!$response->error_code) {
-//             self::$token = $response->access_token;
-//         }
         return $response;
     }
 
@@ -308,6 +309,60 @@ class BootpayApi
             'PUT',
             'escrow/shipping/start/' . $shippingParameters['receipt_id'],
             $shippingParameters
+        );
+    }
+
+    /**
+     * 결제건에 대한 현금영수증 발행
+     * Comment by GOSOMI
+     * @date: 2022-07-28
+     */
+    public static function cashReceiptPublishOnReceipt($cashPublishParameters)
+    {
+        return self::request(
+            'POST',
+            'request/receipt/cash/publish',
+            $cashPublishParameters
+        );
+    }
+
+    /**
+     * 결제건에 대한 현금영수증 취소
+     * Comment by GOSOMI
+     * @date: 2022-07-28
+     */
+    public static function cashReceiptCancelOnReceipt($cashCancelParameters)
+    {
+        return self::request(
+            'DELETE',
+            sprintf('request/receipt/cash/cancel/%s?%s', $cashCancelParameters['receipt_id'], http_build_query($cashCancelParameters))
+        );
+    }
+
+    /**
+     * 현금영수증 별건 발행
+     * Comment by GOSOMI
+     * @date: 2022-08-09
+     */
+    public static function requestCashReceipt($requestCashReceiptParameters)
+    {
+        return self::request(
+            'POST',
+            'request/cash/receipt',
+            $requestCashReceiptParameters
+        );
+    }
+
+    /**
+     * 현금영수증 별건 발행 취소하기
+     * Comment by GOSOMI
+     * @date: 2022-08-09
+     */
+    public static function cancelCashReceipt($cancelCashReceiptParameters)
+    {
+        return self::request(
+            'DELETE',
+            sprintf("request/cash/receipt/%s?%s", $cancelCashReceiptParameters['receipt_id'], http_build_query($cancelCashReceiptParameters))
         );
     }
 }
