@@ -5,7 +5,7 @@ namespace Bootpay\ServerPhp\Commerce;
 use Bootpay\ServerPhp\BootpayCommerceApi;
 
 /**
- * 알림톡 발송 — POST /v1/alimtalk/send · /v1/alimtalk/send/bulk · DELETE /v1/alimtalk/send/{receipt_id}
+ * 알림톡 발송 — POST /alimtalk/send · /alimtalk/send/bulk · DELETE /alimtalk/send/{receipt_id}
  *
  * ⚠️ **실제로 카카오톡이 발송되고 과금된다. 샌드박스가 없다.**
  *
@@ -30,7 +30,7 @@ class AlimtalkSendModule
 
     /**
      * 단건 발송
-     * POST /v1/alimtalk/send
+     * POST /alimtalk/send
      *
      * - variables: array('company_name' => '부트페이몰', 'user_name' => '홍길동') 형태의 치환값
      * - ref_id: 가맹점 발송 식별자 — **멱등 키**로 쓰인다
@@ -56,7 +56,7 @@ class AlimtalkSendModule
 
     /**
      * 벌크 발송 (1요청 = N수신자)
-     * POST /v1/alimtalk/send/bulk
+     * POST /alimtalk/send/bulk
      *
      * recipients: array(array('to' => '01012345678', 'ref_id' => 'bulk-0001', 'variables' => array(...)), ...)
      * ⚠️ 수신자 수만큼 실제 발송되고 과금된다.
@@ -82,7 +82,7 @@ class AlimtalkSendModule
 
     /**
      * 예약 발송 취소
-     * DELETE /v1/alimtalk/send/{receipt_id}
+     * DELETE /alimtalk/send/{receipt_id}
      * 접수(READY) 상태의 예약 건만 취소할 수 있다 — 이미 전송에 들어갔으면 3023 이다.
      * @param string $receiptId 발송 접수 id
      * @return object

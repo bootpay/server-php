@@ -5,7 +5,7 @@ namespace Bootpay\ServerPhp\Commerce;
 use Bootpay\ServerPhp\BootpayCommerceApi;
 
 /**
- * 가맹점 자체 알림톡 템플릿 CRUD · 등록 · 검수 — /v1/alimtalk/templates 계열
+ * 가맹점 자체 알림톡 템플릿 CRUD · 등록 · 검수 — /alimtalk/templates 계열
  *
  * 흐름: (초안 생성 → 확인 → 대행사 등록) → 검수 요청 → 승인(APR) → 발송 가능
  *   `create(array('register' => false, ...))` 로 초안만 만들고, 내용을 확인한 뒤
@@ -25,7 +25,7 @@ class AlimtalkTemplateModule
 
     /**
      * 내 자체 템플릿 목록 조회
-     * GET /v1/alimtalk/templates
+     * GET /alimtalk/templates
      *
      * - ins: 검수상태 필터 — 1 REG(등록) / 2 REQ(검수요청) / 3 APR(승인) / 4 KRR(등록거절) / 5 REJ(승인반려).
      *        숫자 · 숫자문자열 · 벤더 문자열('APR' 등)을 모두 받는다. 해석 못 하는 값은 필터 없음으로 떨어진다.
@@ -44,7 +44,7 @@ class AlimtalkTemplateModule
 
     /**
      * 자체 템플릿 생성
-     * POST /v1/alimtalk/templates
+     * POST /alimtalk/templates
      * ⚠️ register 를 false 로 주지 않으면 대행사·카카오에 **실제 등록**된다(되돌리려면 삭제해야 한다).
      *
      * - emphasize_type: NONE / TEXT(강조표기형) / IMAGE(이미지형) / ITEM_LIST(아이템리스트형)
@@ -73,7 +73,7 @@ class AlimtalkTemplateModule
 
     /**
      * 자체 템플릿 상세 조회
-     * GET /v1/alimtalk/templates/{template_id}
+     * GET /alimtalk/templates/{template_id}
      * template_id 는 문서 id 이고, ObjectId 형식이 아니면 **템플릿 코드**로 해석한다.
      * ⚠️ sync 는 서버 기본값이 **true** 라 조회만 해도 벤더 상태 동기화가 일어난다.
      *    초안(등록 전)을 조회할 때는 sync 를 false 로 주는 것을 권장한다.
@@ -90,7 +90,7 @@ class AlimtalkTemplateModule
 
     /**
      * 자체 템플릿 수정
-     * PUT /v1/alimtalk/templates/{template_id}
+     * PUT /alimtalk/templates/{template_id}
      * ⚠️ **부분 수정이 아니다.** 보내지 않은 필드는 null 로 덮어써지므로 항상 전체 필드를 보낸다.
      * ⚠️ 등록된 템플릿을 수정하면 벤더에도 수정 요청이 나간다.
      *    수정 가능 상태는 초안 / REG(등록) / REJ(승인반려) / KRR(등록거절) 뿐이다 — APR · REQ 는 거부된다.
@@ -110,7 +110,7 @@ class AlimtalkTemplateModule
 
     /**
      * 자체 템플릿 삭제
-     * DELETE /v1/alimtalk/templates/{template_id}
+     * DELETE /alimtalk/templates/{template_id}
      * 초안(등록 전)은 대행사 거부와 무관하게 로컬에서 삭제된다.
      * ⚠️ 등록분은 **대행사 삭제가 성공해야** 삭제된다 — 승인(APR) 템플릿은 카카오가 거부하므로
      *    500(3013)이 오고 템플릿은 남는다. 같은 코드가 대행사에 선점된 채 로컬만 사라지는 것을 막기 위함이다.
@@ -124,7 +124,7 @@ class AlimtalkTemplateModule
 
     /**
      * 초안을 대행사에 등록
-     * POST /v1/alimtalk/templates/{template_id}/register
+     * POST /alimtalk/templates/{template_id}/register
      * ⚠️ 대행사·카카오에 실제 등록된다. 등록 전(초안) 상태에서만 호출할 수 있다.
      * @param string $templateId 템플릿 문서 id 또는 템플릿 코드
      * @return object
@@ -140,7 +140,7 @@ class AlimtalkTemplateModule
 
     /**
      * 검수 요청
-     * POST /v1/alimtalk/templates/{template_id}/inspect
+     * POST /alimtalk/templates/{template_id}/inspect
      * ⚠️ **카카오에 검수를 요청하며 취소할 수 없다.**
      * 대행사 등록이 끝난 대기(R) + REG(등록) 상태에서만 호출할 수 있다 — 초안은 먼저 register() 를 부른다.
      * 반려(REJ/KRR)된 건은 재요청이 아니라 **수정 후 재요청**이다. 반려 사유는 응답의 comments 에 담긴다.
@@ -158,7 +158,7 @@ class AlimtalkTemplateModule
 
     /**
      * 템플릿 목록 내보내기
-     * GET /v1/alimtalk/templates/export
+     * GET /alimtalk/templates/export
      *
      * - scope: private(기본, 내 채널 자체 템플릿) / official(공식 카탈로그) / all
      * ⚠️ SDK 기본 format 을 **json 으로 둔다** — 서버 기본은 csv 지만, csv 본문은 JSON 이 아니라서
@@ -187,7 +187,7 @@ class AlimtalkTemplateModule
 
     /**
      * 이미지형 템플릿의 원본 이미지 업로드
-     * POST /v1/alimtalk/templates/image
+     * POST /alimtalk/templates/image
      * 돌려받은 image_url 을 템플릿 생성/수정의 storage_image_url 로 넘긴다.
      * 규격을 업로드 **전에** 서버가 검사한다 — jpg/png · 500KB 이하 · 가로 500px 이상 · 2:1.
      * replace_url 을 주면 업로드 성공 후에 기존 파일을 지운다.
@@ -203,7 +203,7 @@ class AlimtalkTemplateModule
 
     /**
      * 아이템리스트형 하이라이트 썸네일 업로드
-     * POST /v1/alimtalk/templates/highlight_image
+     * POST /alimtalk/templates/highlight_image
      * ⚠️ 본문 이미지와 **규격이 다르다** — jpg/png · 500KB 이하 · 가로 **108px** 이상 · **1:1**.
      *    본문 이미지 엔드포인트로 올리면 거부된다.
      * 돌려받은 image_url 은 item_highlight.storage_image_url 로 넘긴다.

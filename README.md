@@ -728,7 +728,18 @@ $response = $bootpay->orderSubscriptionAdjustment->create('order_subscription_id
 
 ## 8. 알림톡
 
-카카오 알림톡 발송·템플릿·수신거부·웹훅을 다루는 `/v1/alimtalk` 계열 API입니다.
+카카오 알림톡 발송·템플릿·수신거부·웹훅을 다루는 `/alimtalk` 계열 API입니다.
+
+> 알림톡 API 는 커머스 API(`api.bootapi.com/v1`)가 아니라 **메시지 API 호스트**가 받습니다 (경로에 `/v1` 없음).
+> SDK 가 경로로 호스트를 자동 선택하므로 호출 코드는 바꿀 필요가 없습니다.
+>
+> | mode | 알림톡 호스트 |
+> | --- | --- |
+> | `development` | `https://dev-m.bootapi.com` |
+> | `stage` | `https://stage-m.bootapi.com` |
+> | `production` | `https://message.bootapi.com` |
+>
+> 주소를 바꿔야 하면 `$commerce->setMessageApiUrl('https://...')` 로 현재 mode 의 알림톡 호스트를 덮어씁니다.
 
 > ⚠️ **발송 계열은 샌드박스가 없습니다.** `alimtalkSend->send()` · `sendBulk()` 는 실제로 카카오톡이 나가고 과금되며,
 > `alimtalkSender->otp()` 는 채널 관리자폰으로 실제 문자를, `alimtalkSender->create()` · `alimtalkTemplate->register()` ·

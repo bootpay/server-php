@@ -41,9 +41,19 @@ class BootpayCommerceApi
         'production' => 'https://api.bootapi.com/v1'
     );
 
+    /**
+     * 알림톡 API 전용 base URL — 메시지 API 가 직접 받는다(경로에 /v1 없음).
+     * 26-09-18: resolveBaseUrl() 이 요청 경로로 이 표와 $API_URL 중 하나를 고른다.
+     */
+    private static $MESSAGE_API_URL = array(
+        'development' => 'https://dev-m.bootapi.com',
+        'stage' => 'https://stage-m.bootapi.com',
+        'production' => 'https://message.bootapi.com'
+    );
+
     private static $postMethods = array('POST', 'PUT');
     private static $apiVersion = '2.5.0';
-    private static $sdkVersion = '2.9.1';
+    private static $sdkVersion = '2.9.2';
 
     public $user;
     public $userGroup;
@@ -179,9 +189,41 @@ class BootpayCommerceApi
         return $this;
     }
 
+    /**
+     * 알림톡(메시지 API) base URL 을 현재 mode 에 대해 변경한다.
+     * @param string $url
+     * @return $this
+     */
+    public function setMessageApiUrl($url)
+    {
+        $mode = (is_string($this->mode) && isset(self::$MESSAGE_API_URL[$this->mode])) ? $this->mode : 'production';
+        self::$MESSAGE_API_URL[$mode] = $url;
+        return $this;
+    }
+
     private function entrypoints($url)
     {
-        return implode('/', array(self::resolveApiUrl($this->mode), $url));
+        return implode('/', array(self::resolveBaseUrl($this->mode, $url), $url));
+    }
+
+    /**
+     * 요청 경로에 맞는 base URL 을 돌려준다.
+     *
+     * 26-09-18: 알림톡 API 는 커머스 API(api.bootapi.com/v1)가 아니라 메시지 API(message.bootapi.com, /v1 없음)가 받는다.
+     * 경로·파라미터·응답은 그대로이고 호스트만 다르다 — 그래서 알림톡 모듈은 고치지 않고 여기서 주소만 가른다.
+     * 옛 주소(/v1/alimtalk/*)는 410 으로 응답한다.
+     */
+    private static function resolveBaseUrl($mode, $url)
+    {
+        if (strpos(ltrim((string)$url, '/'), 'alimtalk') === 0) {
+            $messageMode = (is_string($mode) && isset(self::$MESSAGE_API_URL[$mode])) ? $mode : 'production';
+            // 알 수 없는 mode 경고는 resolveApiUrl 과 같은 규칙으로 남긴다
+            if ($messageMode !== $mode) {
+                self::resolveApiUrl($mode);
+            }
+            return self::$MESSAGE_API_URL[$messageMode];
+        }
+        return self::resolveApiUrl($mode);
     }
 
     /**

@@ -5,7 +5,7 @@ namespace Bootpay\ServerPhp\Commerce;
 use Bootpay\ServerPhp\BootpayCommerceApi;
 
 /**
- * 부트페이 공식 알림톡 템플릿 카탈로그 — GET/POST /v1/alimtalk/official 계열
+ * 부트페이 공식 알림톡 템플릿 카탈로그 — GET/POST /alimtalk/official 계열
  *
  * 부트페이가 미리 카카오 승인을 받아 둔 템플릿이라, 그룹키가 등록된 채널이면 **검수 없이 즉시 발송**된다.
  * `alimtalkSender->create()` 로 채널을 등록하면 그룹 등록이 함께 끝나므로 따로 채택할 것이 없다.
@@ -24,7 +24,7 @@ class AlimtalkOfficialModule
 
     /**
      * 공식 템플릿 검색
-     * GET /v1/alimtalk/official
+     * GET /alimtalk/official
      * keyword 는 본문·이름·분류를 부분일치(대소문자 무시)로 훑는다.
      * msg_type 은 BA(기본형) · EX(부가정보형)만 존재한다 — 그룹 템플릿이라 AD/MI 는 쓸 수 없다.
      * ksp_id 를 주면 그 채널의 변수 예문 사전으로 variable_examples 를 채워 준다(표시용).
@@ -49,7 +49,7 @@ class AlimtalkOfficialModule
 
     /**
      * 보내려는 문구로 공식 템플릿 추천받기
-     * POST /v1/alimtalk/official/recommend
+     * POST /alimtalk/official/recommend
      * 유사도 score(0~1) 내림차순으로 돌려준다. limit 은 서버 기본 5.
      * @param array $params text(필수) / category / limit / ksp_id
      * @return object
@@ -67,7 +67,7 @@ class AlimtalkOfficialModule
 
     /**
      * 공식 템플릿 상세 조회
-     * GET /v1/alimtalk/official/{code}
+     * GET /alimtalk/official/{code}
      * code 는 서버 채번 코드(슬래시를 포함하지 않는다). 없거나 미노출이면 404(3015).
      * @param string $code 공식 템플릿 코드
      * @param string|null $kspId 변수 예문을 채워 볼 채널 id (선택)

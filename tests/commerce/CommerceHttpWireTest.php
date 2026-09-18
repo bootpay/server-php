@@ -18,6 +18,9 @@ class CommerceHttpWireTest extends WireEchoTestCase
     /** @var array 원본 API_URL (테스트 후 복원) */
     private static $originalApiUrl;
 
+    /** @var array 원본 MESSAGE_API_URL (테스트 후 복원) */
+    private static $originalMessageApiUrl;
+
     /** @var BootpayCommerceApi */
     private $api;
 
@@ -29,17 +32,25 @@ class CommerceHttpWireTest extends WireEchoTestCase
         $redirected = self::$originalApiUrl;
         $redirected['development'] = self::echoServerUrl('/v1');
         $prop->setValue(null, $redirected);
+
+        // 알림톡은 메시지 API 호스트(/v1 없음)로 나간다 — 같은 echo 서버의 루트로 돌린다
+        $messageProp = self::apiUrlProperty('MESSAGE_API_URL');
+        self::$originalMessageApiUrl = $messageProp->getValue();
+        $messageRedirected = self::$originalMessageApiUrl;
+        $messageRedirected['development'] = self::echoServerUrl('');
+        $messageProp->setValue(null, $messageRedirected);
     }
 
     public static function tearDownAfterClass(): void
     {
         self::apiUrlProperty()->setValue(null, self::$originalApiUrl);
+        self::apiUrlProperty('MESSAGE_API_URL')->setValue(null, self::$originalMessageApiUrl);
         parent::tearDownAfterClass();
     }
 
-    private static function apiUrlProperty()
+    private static function apiUrlProperty($name = 'API_URL')
     {
-        $prop = new ReflectionProperty(BootpayCommerceApi::class, 'API_URL');
+        $prop = new ReflectionProperty(BootpayCommerceApi::class, $name);
         if (PHP_VERSION_ID < 80100) {
             $prop->setAccessible(true);
         }
@@ -234,7 +245,7 @@ class CommerceHttpWireTest extends WireEchoTestCase
             $res = $this->api->alimtalkTemplate->image($dir . '/tpl.png', 'https://cdn.bootpay.co.kr/old.png');
 
             $this->assertEquals('POST', $res->method);
-            $this->assertEquals('/v1/alimtalk/templates/image', $res->uri);
+            $this->assertEquals('/alimtalk/templates/image', $res->uri);
 
             $contentType = self::echoHeader($res, 'Content-Type');
             $this->assertStringStartsWith('multipart/form-data', $contentType);
@@ -273,7 +284,7 @@ class CommerceHttpWireTest extends WireEchoTestCase
 
         $echoed = json_decode($res->body);
         $this->assertEquals('GET', $echoed->method);
-        $this->assertEquals('/v1/alimtalk/templates/export?format=csv&scope=private', $echoed->uri);
+        $this->assertEquals('/alimtalk/templates/export?format=csv&scope=private', $echoed->uri);
         $this->assertEquals('*/*', self::echoHeader($echoed, 'Accept'));
         $this->assertEquals('user', self::echoHeader($echoed, 'BOOTPAY-ROLE'));
         $this->assertEquals('Basic ' . base64_encode('ck:sk'), self::echoHeader($echoed, 'Authorization'));
@@ -284,7 +295,7 @@ class CommerceHttpWireTest extends WireEchoTestCase
     {
         $res = $this->api->alimtalkTemplate->export();
 
-        $this->assertEquals('/v1/alimtalk/templates/export?format=json', $res->uri);
+        $this->assertEquals('/alimtalk/templates/export?format=json', $res->uri);
         $this->assertEquals('application/json', self::echoHeader($res, 'Content-Type'));
     }
 
@@ -297,12 +308,43 @@ class CommerceHttpWireTest extends WireEchoTestCase
         ));
 
         $this->assertEquals('POST', $res->method);
-        $this->assertEquals('/v1/alimtalk/send', $res->uri);
+        $this->assertEquals('/alimtalk/send', $res->uri);
         $this->assertSame(
             array('template_code' => 'TPL-1', 'to' => '01012345678', 'fallback' => false),
             json_decode($res->raw_body, true)
         );
         $this->assertEquals('user', self::echoHeader($res, 'BOOTPAY-ROLE'));
+    }
+
+    /**
+     * 26-09-18: 알림톡(/alimtalk/*)만 메시지 API 호스트(/v1 없음)로 가고, 그 외는 기존 /v1 호스트 그대로다.
+     */
+    public function testAlimtalkRoutesToMessageHostWithoutV1()
+    {
+        $alimtalk = $this->api->alimtalkSender->getList();
+        $this->assertEquals('GET', $alimtalk->method);
+        $this->assertEquals('/alimtalk/senders', $alimtalk->uri);
+
+        $commerce = $this->api->user->getList();
+        $this->assertEquals('/v1/users', $commerce->uri);
+    }
+
+    /** 메시지 API 기본 주소 — mode 별 표와 알 수 없는 mode 의 production 폴백 */
+    public function testMessageApiBaseUrlTable()
+    {
+        $resolve = new \ReflectionMethod(BootpayCommerceApi::class, 'resolveBaseUrl');
+        if (PHP_VERSION_ID < 80100) {
+            $resolve->setAccessible(true);
+        }
+        $original = self::$originalMessageApiUrl;
+        $this->assertEquals('https://dev-m.bootapi.com', $original['development']);
+        $this->assertEquals('https://stage-m.bootapi.com', $original['stage']);
+        $this->assertEquals('https://message.bootapi.com', $original['production']);
+
+        $this->assertEquals('https://stage-m.bootapi.com', $resolve->invoke(null, 'stage', 'alimtalk/send'));
+        $this->assertEquals('https://stage-m.bootapi.com', $resolve->invoke(null, 'stage', '/alimtalk/send'));
+        $this->assertEquals('https://stage-api.bootapi.com/v1', $resolve->invoke(null, 'stage', 'users'));
+        $this->assertEquals('https://message.bootapi.com', $resolve->invoke(null, 'production', 'alimtalk/messages'));
     }
 
     public function testMallUserSessionTransmitsJwtHeader()

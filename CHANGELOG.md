@@ -1,3 +1,20 @@
+### 2.9.2
+
+Ruby SDK parity — 알림톡 API 를 메시지 API 호스트로 (`3f959fc`). **기존 메서드·파라미터 제거 없음.**
+
+알림톡 API 는 이제 커머스 API(`api.bootapi.com/v1`)가 아니라 메시지 API(`message.bootapi.com`, 경로에 `/v1` 없음)가 받는다.
+경로·파라미터·응답은 그대로이고 호스트만 다르므로, 알림톡 모듈은 그대로 두고 공통 계층(`BootpayCommerceApi`)에서
+요청 경로가 `alimtalk` 으로 시작하면 메시지 API 호스트로 보낸다. 옛 주소(`/v1/alimtalk/*`)는 410 으로 응답한다.
+
+| mode | 알림톡 | 그 외 |
+| --- | --- | --- |
+| `development` | `https://dev-m.bootapi.com` | `https://dev-api.bootapi.com/v1` |
+| `stage` | `https://stage-m.bootapi.com` | `https://stage-api.bootapi.com/v1` |
+| `production` | `https://message.bootapi.com` | `https://api.bootapi.com/v1` |
+
+- JSON(`request`)·원문(`requestRaw`)·multipart(`requestMultipart`) 세 경로 모두 적용된다.
+- `setMessageApiUrl($url)` 추가 — 현재 mode 의 알림톡 호스트를 덮어쓴다 (Ruby `set_message_api_url`).
+
 ### 2.9.1
 
 Ruby SDK parity — 별건 현금영수증의 `pg` 를 선택 파라미터로 (`c716a1f`). **기존 메서드·파라미터 제거 없음.**
