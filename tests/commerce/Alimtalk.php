@@ -66,13 +66,15 @@ try {
     //     'to' => '01012345678',
     //     'variables' => array('user_name' => '홍길동'),
     //     'ref_id' => 'order-0001',   // 멱등 키
-    //     'fallback' => false         // null(미지정)은 프로젝트 기본값, false 는 명시적으로 끔
+    //     'fallback' => false,        // null(미지정)은 프로젝트 기본값, false 는 명시적으로 끔
+    //     'webhook_url' => 'https://example.com/hooks/alimtalk'  // 이 건의 결과 웹훅만 받을 주소(https)
     // )));
     // print_r($bootpay->alimtalkSend->sendBulk(array(
     //     'template_code' => 'TEMPLATE_CODE',
     //     'recipients' => array(
     //         array('to' => '01012345678', 'ref_id' => 'bulk-0001', 'variables' => array('user_name' => '홍길동'))
-    //     )
+    //     ),
+    //     'webhook_url' => 'https://example.com/hooks/alimtalk'  // 요청 단위 하나
     // )));
     // print_r($bootpay->alimtalkSend->cancel('RECEIPT_ID'));  // 예약(READY) 건만 취소 가능
 

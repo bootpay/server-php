@@ -883,12 +883,18 @@ $response = $bootpay->alimtalkSend->send(array(
     'ref_id' => 'order-0001',                     // 멱등 키 — 같은 값으로 재요청하면 기존 receipt 를 반환
     'fallback' => false,                          // 알림톡 실패 시 문자(LMS) 대체발송
     'reserved_at' => '2026-09-01T10:00:00+09:00', // 생략하면 즉시 발송
-    'sender_key' => 'sender_key_here'             // 연동 채널이 둘 이상일 때만 필수
+    'sender_key' => 'sender_key_here',            // 연동 채널이 둘 이상일 때만 필수
+    'webhook_url' => 'https://example.com/hooks/alimtalk'  // 이 건의 결과 웹훅만 받을 주소
 ));
 ```
 
 > `fallback` 은 **미지정(생략)과 `false` 의 의미가 다릅니다.** 생략하면 프로젝트 기본값을 따르고, `false` 는 명시적으로 끕니다.
 > 켜면 발신번호가 등록돼 있어야 하며 없으면 거부(3030)됩니다.
+
+> `webhook_url` 을 주면 이 건의 발송 성공·실패·문자 대체발송·예약취소 웹훅이 **그 주소로만** 갑니다
+> (8-7 의 프로젝트 웹훅 설정은 쓰이지 않습니다). `https` 만 허용하며 2,000자를 넘으면 거부(3028)됩니다.
+> 서명은 프로젝트 시크릿으로 하므로, 시크릿만 필요하다면 웹훅 설정 없이 `alimtalkWebhook->rotateSecret()` 으로 발급받을 수 있습니다.
+> ⚠️ 같은 `ref_id` 로 이미 접수·성공한 건을 다시 요청하면 기존 receipt 가 그대로 돌아오고 **새 주소는 무시됩니다**.
 
 ```php
 // 벌크 발송 (1요청 = N수신자) — ⚠️ 수신자 수만큼 실제 발송·과금됩니다
@@ -897,7 +903,8 @@ $response = $bootpay->alimtalkSend->sendBulk(array(
     'recipients' => array(
         array('to' => '01012345678', 'ref_id' => 'bulk-0001', 'variables' => array('user_name' => '홍길동')),
         array('to' => '01087654321', 'ref_id' => 'bulk-0002', 'variables' => array('user_name' => '김철수'))
-    )
+    ),
+    'webhook_url' => 'https://example.com/hooks/alimtalk'  // 요청 단위 하나 — 모든 수신자 건의 결과가 이리로 옵니다
 ));
 
 // 예약 발송 취소 — 접수(READY) 상태의 예약 건만 가능합니다
@@ -905,6 +912,7 @@ $response = $bootpay->alimtalkSend->cancel('receipt_id_here');
 ```
 
 > 벌크는 쿼터를 넘으면 요청 시점에 **전체 거부**(3022)됩니다. 수신거부 번호는 `skipped` 로 빠지며 과금되지 않습니다.
+> `webhook_url` 도 요청 단위 하나이며, 형식이 틀리면(https 아님 · 2,000자 초과) 요청 전체가 거부(3028)됩니다.
 
 ### 8-5. 발송내역·집계
 

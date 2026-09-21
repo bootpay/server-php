@@ -1,3 +1,32 @@
+### 2.9.3
+
+Ruby SDK parity — 알림톡 발송에 건별 결과 웹훅 주소 `webhook_url` 추가 (`05ea556`). **기존 메서드·파라미터 제거 없음.**
+
+`alimtalkSend->send()` · `alimtalkSend->sendBulk()` 가 `webhook_url` 을 받는다.
+주면 그 건(벌크는 그 요청으로 나간 모든 수신자 건)의 발송 성공·실패·문자(LMS) 대체발송·예약취소 웹훅이
+**이 주소로만** 가고, 프로젝트 웹훅 설정(`alimtalkWebhook->update()`)은 쓰이지 않는다.
+
+- `https` 만 허용하며 2,000자를 넘으면 `3028` 로 거부된다. 벌크는 형식이 틀리면 **요청 전체**가 거부된다.
+- 서명은 프로젝트 시크릿으로 한다. 웹훅 설정 없이 시크릿만 필요하면 `alimtalkWebhook->rotateSecret()` 으로 발급받을 수 있다.
+- ⚠️ 같은 `ref_id` 로 이미 접수·성공한 건을 다시 요청하면 기존 접수가 그대로 돌아오고 **새 주소는 무시된다**(멱등).
+- 다른 선택 파라미터와 같이 미지정(`null`)이면 키 자체를 보내지 않는다 — 프로젝트 웹훅 설정을 따른다.
+
+```php
+$response = $bootpay->alimtalkSend->send(array(
+    'template_code' => 'template_code_here',
+    'to'            => '01012345678',
+    'ref_id'        => 'order-0001',
+    'webhook_url'   => 'https://example.com/hooks/alimtalk'
+));
+
+// 벌크는 요청 단위로 하나 — 이 요청으로 나간 모든 수신자 건의 결과가 같은 주소로 온다
+$response = $bootpay->alimtalkSend->sendBulk(array(
+    'template_code' => 'template_code_here',
+    'recipients'    => array(array('to' => '01012345678', 'ref_id' => 'bulk-0001')),
+    'webhook_url'   => 'https://example.com/hooks/alimtalk'
+));
+```
+
 ### 2.9.2
 
 Ruby SDK parity — 알림톡 API 를 메시지 API 호스트로 (`3f959fc`). **기존 메서드·파라미터 제거 없음.**

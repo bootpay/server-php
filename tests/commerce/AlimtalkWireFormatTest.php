@@ -306,6 +306,37 @@ class AlimtalkWireFormatTest extends TestCase
     }
 
     /**
+     * webhook_url (05ea556) — 건별 결과 웹훅 주소. 주면 그대로 바디에 실려야 한다.
+     * 지정하지 않으면 키 자체가 없어야 한다 (프로젝트 웹훅 설정을 따르는 것과
+     * 빈 주소를 보내는 것은 서버에서 다르게 해석된다).
+     */
+    public function testSendWithWebhookUrl()
+    {
+        $this->api->alimtalkSend->send(array(
+            'template_code' => 'TPL-1',
+            'to' => '01012345678',
+            'webhook_url' => 'https://example.com/hooks/alimtalk/order-1'
+        ));
+        $this->assertAlimtalkCall('POST', 'alimtalk/send');
+        $this->assertSame(
+            array(
+                'template_code' => 'TPL-1',
+                'to' => '01012345678',
+                'webhook_url' => 'https://example.com/hooks/alimtalk/order-1'
+            ),
+            $this->lastCall()['data']
+        );
+
+        $this->api->alimtalkSend->send(array('template_code' => 'TPL-1', 'to' => '01012345678'));
+        $this->assertArrayNotHasKey('webhook_url', $this->lastCall()['data']);
+
+        $this->api->alimtalkSend->send(
+            array('template_code' => 'TPL-1', 'to' => '01012345678', 'webhook_url' => null)
+        );
+        $this->assertArrayNotHasKey('webhook_url', $this->lastCall()['data']);
+    }
+
+    /**
      * fallback 은 미지정(null)과 false 의 의미가 다르다 —
      * null 은 프로젝트 기본값을 따르고 false 는 명시적으로 끈다. false 가 잘려 나가면 안 된다.
      */
@@ -348,6 +379,29 @@ class AlimtalkWireFormatTest extends TestCase
             ),
             $this->lastCall()['data']
         );
+    }
+
+    /** webhook_url (05ea556) — 벌크는 요청 단위로 하나만 받는다 */
+    public function testSendBulkWithWebhookUrl()
+    {
+        $recipients = array(array('to' => '01012345678', 'ref_id' => 'bulk-0001'));
+        $this->api->alimtalkSend->sendBulk(array(
+            'template_code' => 'TPL-1',
+            'recipients' => $recipients,
+            'webhook_url' => 'https://example.com/hooks/alimtalk/bulk'
+        ));
+        $this->assertAlimtalkCall('POST', 'alimtalk/send/bulk');
+        $this->assertSame(
+            array(
+                'template_code' => 'TPL-1',
+                'recipients' => $recipients,
+                'webhook_url' => 'https://example.com/hooks/alimtalk/bulk'
+            ),
+            $this->lastCall()['data']
+        );
+
+        $this->api->alimtalkSend->sendBulk(array('template_code' => 'TPL-1', 'recipients' => $recipients));
+        $this->assertArrayNotHasKey('webhook_url', $this->lastCall()['data']);
     }
 
     public function testSendBulkRequiresRecipients()

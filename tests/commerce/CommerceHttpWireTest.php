@@ -317,6 +317,29 @@ class CommerceHttpWireTest extends WireEchoTestCase
     }
 
     /**
+     * 26-09-21: 건별 결과 웹훅 주소(webhook_url)가 요청 바디에 그대로 실려 나간다.
+     */
+    public function testAlimtalkSendTransmitsWebhookUrlInBody()
+    {
+        $res = $this->api->alimtalkSend->send(array(
+            'template_code' => 'TPL-1',
+            'to' => '01012345678',
+            'webhook_url' => 'https://example.com/hooks/alimtalk'
+        ));
+
+        $this->assertEquals('POST', $res->method);
+        $this->assertEquals('/alimtalk/send', $res->uri);
+        $this->assertSame(
+            array(
+                'template_code' => 'TPL-1',
+                'to' => '01012345678',
+                'webhook_url' => 'https://example.com/hooks/alimtalk'
+            ),
+            json_decode($res->raw_body, true)
+        );
+    }
+
+    /**
      * 26-09-18: 알림톡(/alimtalk/*)만 메시지 API 호스트(/v1 없음)로 가고, 그 외는 기존 /v1 호스트 그대로다.
      */
     public function testAlimtalkRoutesToMessageHostWithoutV1()
