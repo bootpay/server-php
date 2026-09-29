@@ -1,3 +1,49 @@
+### 2.10.0
+
+Ruby SDK parity — 커머스 게시판 API 28종 추가 (`144be88`). **기존 메서드·파라미터 제거 없음.**
+
+공지사항 · FAQ · 1:1 문의 · 상품문의 · 상품평 다섯 게시판 모듈이 생겼다.
+
+| 모듈 | 엔드포인트 | 메서드 |
+| --- | --- | --- |
+| `notice` | `/v1/notices` | `getList` `detail` `create` `update` `delete` |
+| `faq` | `/v1/faqs` | `getList` `detail` `create` `update` `delete` |
+| `inquiry` | `/v1/inquiries` | `getList` `detail` `create` `update` `delete` `answer` |
+| `productQna` | `/v1/product-qnas` | `getList` `detail` `create` `update` `delete` `answer` |
+| `productReview` | `/v1/reviews` | `getList` `detail` `create` `update` `delete` `reply` |
+
+공통 규약:
+
+- 조회/삭제는 `supervisor => true` 로 `BOOTPAY-ROLE: supervisor`, 없으면 `user` 로 나간다.
+  공지·FAQ 의 쓰기는 supervisor 고정, 문의·상품문의·상품평의 쓰기는 user 고정,
+  답변(`answer`)·답글(`reply`)은 supervisor 고정이다.
+- 회원은 `user_id`(Bootpay 회원 `_id` 또는 외부 회원 ID) · `login_id` · `user_jwt` 로 가리킨다.
+  `user_jwt` 는 값이 있을 때만 `Bootpay-User-JWT` 헤더로 붙는다.
+- `page` 기본 1 / `limit` 기본 20. `idempotency_key` 는 `Idempotency-Key` 헤더로 옮겨 실린다.
+- `null` 은 키째로 빼고 `false` · `0` · `''` · `array()` 는 그대로 보낸다 — Ruby 의 `.compact` 와 같은 규칙이라
+  `is_display => false`, `title => ''`(제목 지우기), `images => array()`(사진 전체 삭제)가 의도대로 전달된다.
+- ⚠️ 상품문의 `delete` 의 `guest_password` 는 URL 쿼리가 아니라 **DELETE 본문**으로 보낸다 (액세스 로그 노출 방지).
+  상품평 `delete` 의 `reason` 은 Ruby 와 같이 쿼리로 나간다.
+
+```php
+$response = $bootpay->notice->getList(array('view' => 'all', 'supervisor' => true));
+$response = $bootpay->faq->create(array('title' => '교환/반품은?', 'content' => '마이페이지에서 신청합니다.'));
+$response = $bootpay->inquiry->getList(array('supervisor' => true, 'answered' => false));
+$response = $bootpay->inquiry->answer(array('inquiry_id' => 'INQUIRY_ID', 'content' => '오늘 출고됩니다.'));
+$response = $bootpay->productQna->create(array(
+    'product_id' => 'PRODUCT_ID', 'content' => '재입고 예정이 있나요?',
+    'is_secret' => true, 'guest_name' => '비회원', 'guest_password' => '1234'
+));
+$response = $bootpay->productReview->create(array(
+    'user_id' => 'USER_ID', 'order_id' => 'ORDER_ID', 'product_id' => 'PRODUCT_ID',
+    'rating' => 5, 'content' => '배송도 빠르고 품질도 좋아요.',
+    'images' => array('https://example.com/review-1.jpg')
+));
+```
+
+수시결제 `orderSubscription->supervisorCharge()` · `supervisorChargeRevoke()` 는 같은 커밋에서 Ruby 에 스펙만 추가됐고
+구현은 그대로다 — PHP 에도 이미 같은 wire 로 들어와 있어 바뀐 것이 없다.
+
 ### 2.9.3
 
 Ruby SDK parity — 알림톡 발송에 건별 결과 웹훅 주소 `webhook_url` 추가 (`05ea556`). **기존 메서드·파라미터 제거 없음.**

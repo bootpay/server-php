@@ -52,6 +52,12 @@ PHP 언어로 작성된 어플리케이션, 프레임워크 등에서 사용가�
     - [8-5. 발송내역·집계](#8-5-발송내역집계)
     - [8-6. 수신거부](#8-6-수신거부)
     - [8-7. 웹훅](#8-7-웹훅)
+  - [9. 게시판](#9-게시판)
+    - [9-1. 공지사항](#9-1-공지사항)
+    - [9-2. FAQ](#9-2-faq)
+    - [9-3. 1:1 문의](#9-3-11-문의)
+    - [9-4. 상품문의](#9-4-상품문의)
+    - [9-5. 상품평](#9-5-상품평)
 
 ### 기타
 - [Example 프로젝트](#example-프로젝트)
@@ -983,6 +989,171 @@ $response = $bootpay->alimtalkWebhook->deliveries(array('page' => 1, 'limit' => 
 ```
 X-Bootpay-Signature: sha256=HMAC_SHA256(secret, "{X-Bootpay-Timestamp}.{raw_body}")
 ```
+
+## 9. 게시판
+
+공지사항 · FAQ · 1:1 문의 · 상품문의 · 상품평 다섯 게시판입니다. 공통 규약은 다음과 같습니다.
+
+- 조회/삭제는 `supervisor => true` 를 주면 운영자 모드(`BOOTPAY-ROLE: supervisor`)로 나가고, 없으면 고객 모드(`user`)입니다.
+- 회원을 가리키는 값은 `user_id`(Bootpay 회원 `_id` 또는 외부 회원 ID) · `login_id` · `user_jwt` 셋 중 하나입니다.
+  `user_jwt` 는 `Bootpay-User-JWT` 헤더로, 나머지는 쿼리/바디로 나갑니다.
+- `idempotency_key` 를 주면 그 값이 `Idempotency-Key` 헤더로 나가고, 없으면 호출마다 새로 생성됩니다.
+- `null` 인 값은 아예 보내지 않습니다. `false` · `0` · `''` · `array()` 는 의미 있는 값이라 그대로 전송됩니다.
+
+### 9-1. 공지사항
+
+```php
+$response = $bootpay->notice->getList(array('page' => 1, 'limit' => 20, 'keyword' => '배송'));
+$response = $bootpay->notice->getList(array('view' => 'all', 'supervisor' => true));  // 비공개 공지까지
+$response = $bootpay->notice->detail('NOTICE_ID');
+$response = $bootpay->notice->detail(array('notice_id' => 'NOTICE_ID', 'supervisor' => true));
+
+// 등록/수정/삭제는 supervisor 전용입니다
+$response = $bootpay->notice->create(array(
+    'title' => '추석 배송 안내',
+    'content' => '9/29 ~ 10/2 배송이 쉽니다.',
+    'is_notice' => true,
+    'is_display' => true
+));
+$response = $bootpay->notice->update(array('notice_id' => 'NOTICE_ID', 'is_display' => false));
+$response = $bootpay->notice->delete('NOTICE_ID');
+```
+
+> ⚠️ 고객 모드는 몰 공지사항 사용여부가 꺼져 있으면 `BOARD_FEATURE_DISABLED` 로 거절됩니다.
+> 비공개 공지는 `supervisor => true` 일 때만 보입니다(아니면 `404 POST_NOT_FOUND`).
+> `images` 를 보내면 사진 목록 **전체를 교체**합니다(`array()` 면 모두 삭제).
+
+### 9-2. FAQ
+
+구조는 공지사항과 같고 `is_notice` 만 없습니다.
+
+```php
+$response = $bootpay->faq->getList(array('view' => 'all', 'supervisor' => true));
+$response = $bootpay->faq->detail('FAQ_ID');
+$response = $bootpay->faq->create(array(
+    'title' => '교환/반품은 어떻게 하나요?',
+    'content' => '마이페이지 > 주문내역에서 신청하실 수 있습니다.'
+));
+$response = $bootpay->faq->update(array('faq_id' => 'FAQ_ID', 'content' => '내용이 바뀌었습니다.'));
+$response = $bootpay->faq->delete('FAQ_ID');
+```
+
+### 9-3. 1:1 문의
+
+```php
+// 회원 모드 — 본인 문의만 보입니다
+$response = $bootpay->inquiry->getList(array('user_id' => 'USER_ID', 'page' => 1, 'limit' => 20));
+
+// 운영자 모드 — 몰 전체. answered 는 true 답변 완료만 / false 미답변만 / 미지정 전체
+$response = $bootpay->inquiry->getList(array('supervisor' => true, 'answered' => false));
+
+$response = $bootpay->inquiry->detail(array('inquiry_id' => 'INQUIRY_ID', 'user_id' => 'USER_ID'));
+
+$response = $bootpay->inquiry->create(array(
+    'user_id' => 'USER_ID',
+    'title' => '배송 문의',
+    'content' => '언제 출발하나요?',
+    'product_id' => 'PRODUCT_ID',
+    'option' => '블랙 / M',
+    'order_id' => 'ORDER_ID'
+));
+
+$response = $bootpay->inquiry->update(array(
+    'inquiry_id' => 'INQUIRY_ID',
+    'user_id' => 'USER_ID',
+    'title' => '',                      // '' 를 보내면 제목을 지웁니다
+    'content' => '내용을 고칩니다.'
+));
+
+$response = $bootpay->inquiry->delete(array('inquiry_id' => 'INQUIRY_ID', 'supervisor' => true));
+
+// 답변 등록·수정 (supervisor 전용) — 없으면 만들고 있으면 바꿉니다
+$response = $bootpay->inquiry->answer(array('inquiry_id' => 'INQUIRY_ID', 'content' => '오늘 출고됩니다.'));
+```
+
+> ⚠️ 답변이 달린 문의는 수정할 수 없습니다(`409 INQUIRY_ALREADY_ANSWERED`).
+> 문의를 삭제하면 달린 답변도 함께 지워집니다.
+
+### 9-4. 상품문의
+
+```php
+// 고객 모드 목록은 product_id 가 필수입니다
+$response = $bootpay->productQna->getList(array('product_id' => 'PRODUCT_ID'));
+
+// 운영자 모드 — view: 'all' 이면 몰 전체(숨김 포함), product_id 는 선택 필터입니다
+$response = $bootpay->productQna->getList(array('supervisor' => true, 'view' => 'all'));
+
+$response = $bootpay->productQna->detail(array('product_qna_id' => 'QNA_ID', 'user_id' => 'USER_ID'));
+
+// 비회원 작성 — 몰이 비회원 작성을 허용할 때만 됩니다 (회원 문의면 guest_* 는 무시됩니다)
+$response = $bootpay->productQna->create(array(
+    'product_id' => 'PRODUCT_ID',
+    'title' => '재입고 문의',
+    'content' => '품절된 색상 재입고 예정이 있나요?',
+    'is_secret' => true,
+    'guest_name' => '비회원',
+    'guest_password' => '1234'
+));
+
+$response = $bootpay->productQna->update(array(
+    'product_qna_id' => 'QNA_ID',
+    'guest_password' => '1234',
+    'content' => '수정된 내용'
+));
+
+$response = $bootpay->productQna->delete(array('product_qna_id' => 'QNA_ID', 'guest_password' => '1234'));
+
+// 답변 등록·수정 (supervisor 전용)
+$response = $bootpay->productQna->answer(array('product_qna_id' => 'QNA_ID', 'content' => '다음 주 입고 예정입니다.'));
+```
+
+> ⚠️ 다른 사람의 비밀글은 목록에서 `is_viewable: false` 로 본문 없이 오고, 단건 조회는 `403 PRODUCT_QNA_SECRET_FORBIDDEN` 입니다.
+> `guest_password` 는 URL 쿼리가 아니라 **본문**으로 보냅니다(액세스 로그 노출 방지 — 삭제도 마찬가지입니다).
+
+### 9-5. 상품평
+
+```php
+// 회원 모드 — 그 회원이 쓴 상품평만 보입니다
+$response = $bootpay->productReview->getList(array('user_id' => 'USER_ID'));
+
+// 운영자 모드 — 몰 전체. user_id 는 작성 회원 필터(선택)입니다
+$response = $bootpay->productReview->getList(array('supervisor' => true, 'product_id' => 'PRODUCT_ID'));
+
+$response = $bootpay->productReview->detail(array('product_review_id' => 'REVIEW_ID', 'user_id' => 'USER_ID'));
+
+$response = $bootpay->productReview->create(array(
+    'user_id' => 'USER_ID',
+    'order_id' => 'ORDER_ID',
+    'product_id' => 'PRODUCT_ID',
+    'rating' => 5,
+    'content' => '배송도 빠르고 품질도 좋아요. 재구매 의사 있습니다.',
+    'images' => array('https://example.com/review-1.jpg')
+));
+
+$response = $bootpay->productReview->update(array(
+    'product_review_id' => 'REVIEW_ID',
+    'user_id' => 'USER_ID',
+    'images' => array()                 // 빈 배열이면 사진을 모두 지웁니다
+));
+
+$response = $bootpay->productReview->delete(array(
+    'product_review_id' => 'REVIEW_ID',
+    'supervisor' => true,
+    'reason' => 'spam'
+));
+
+// 판매자 답글 등록·수정 (supervisor 전용, 10자 이상)
+$response = $bootpay->productReview->reply(array(
+    'product_review_id' => 'REVIEW_ID',
+    'content' => '소중한 후기 감사합니다. 앞으로도 잘 부탁드립니다.'
+));
+```
+
+> ⚠️ `order_id` 는 회원의 **구매확정** 주문이어야 하고, `product_id`(·`product_option_id`)는 그 주문에 담긴 상품이어야 합니다.
+> `images` 는 사진 URL 최대 5개이며 파일 업로드는 지원하지 않습니다.
+> 수정은 작성 후 7일 이내만 됩니다(`REVIEW_EDIT_TIME_EXPIRED`). 삭제하면 지급된 적립금 회수·상품 통계 차감이 함께 일어납니다.
+>
+> 상품 상세의 공개 상품평 목록은 이 모듈이 아니라 `GET /v1/products/{id}/reviews` 를 씁니다.
 
 
 ## Role 설정

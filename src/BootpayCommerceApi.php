@@ -19,6 +19,11 @@ use Bootpay\ServerPhp\Commerce\PointModule;
 use Bootpay\ServerPhp\Commerce\CartModule;
 use Bootpay\ServerPhp\Commerce\MallSettingModule;
 use Bootpay\ServerPhp\Commerce\WebhookModule;
+use Bootpay\ServerPhp\Commerce\NoticeModule;
+use Bootpay\ServerPhp\Commerce\FaqModule;
+use Bootpay\ServerPhp\Commerce\InquiryModule;
+use Bootpay\ServerPhp\Commerce\ProductQnaModule;
+use Bootpay\ServerPhp\Commerce\ProductReviewModule;
 use Bootpay\ServerPhp\Commerce\AlimtalkSenderModule;
 use Bootpay\ServerPhp\Commerce\AlimtalkTemplateModule;
 use Bootpay\ServerPhp\Commerce\AlimtalkSendModule;
@@ -53,7 +58,7 @@ class BootpayCommerceApi
 
     private static $postMethods = array('POST', 'PUT');
     private static $apiVersion = '2.5.0';
-    private static $sdkVersion = '2.9.3';
+    private static $sdkVersion = '2.10.0';
 
     public $user;
     public $userGroup;
@@ -72,6 +77,11 @@ class BootpayCommerceApi
     public $cart;
     public $mallSetting;
     public $webhook;
+    public $notice;
+    public $faq;
+    public $inquiry;
+    public $productQna;
+    public $productReview;
     public $alimtalkSender;
     public $alimtalkTemplate;
     public $alimtalkSend;
@@ -107,6 +117,11 @@ class BootpayCommerceApi
         $this->cart = new CartModule($this);
         $this->mallSetting = new MallSettingModule($this);
         $this->webhook = new WebhookModule($this);
+        $this->notice = new NoticeModule($this);
+        $this->faq = new FaqModule($this);
+        $this->inquiry = new InquiryModule($this);
+        $this->productQna = new ProductQnaModule($this);
+        $this->productReview = new ProductReviewModule($this);
         $this->alimtalkSender = new AlimtalkSenderModule($this);
         $this->alimtalkTemplate = new AlimtalkTemplateModule($this);
         $this->alimtalkSend = new AlimtalkSendModule($this);

@@ -21,6 +21,7 @@
             <file>tests/commerce/BackwardCompatibilityTest.php</file>
             <file>tests/commerce/CommerceScopeTest.php</file>
             <file>tests/commerce/AlimtalkWireFormatTest.php</file>
+            <file>tests/commerce/BoardWireFormatTest.php</file>
         </testsuite>
         <testsuite name="PG">
             <directory>tests/pg</directory>
