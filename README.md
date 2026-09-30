@@ -974,7 +974,8 @@ $response = $bootpay->alimtalkWebhook->detail();   // 미설정이면 { configur
 $response = $bootpay->alimtalkWebhook->update(array(
     'url' => 'https://example.com/hooks/alimtalk',
     'events' => array(301, 302, 303, 304, 310, 311),
-    'enabled' => true
+    'enabled' => true,
+    'retry_count' => 10       // 건별 재시도 횟수 (1~25, 기본 10)
 ));
 
 $response = $bootpay->alimtalkWebhook->test();          // ⚠️ 설정된 URL 로 실제 요청이 나갑니다
@@ -983,6 +984,8 @@ $response = $bootpay->alimtalkWebhook->deliveries(array('page' => 1, 'limit' => 
 ```
 
 이벤트 코드: `300` 발송 접수(기본 미구독) / `301` 전달 성공 / `302` 전달 실패 / `303` 예약 취소 / `304` 문자(LMS) 대체발송 전환 / `310` 검수 승인 / `311` 검수 반려 / `320` 수신거부 등록(기본 미구독). `events` 를 비우면 기본 구독셋(`301`·`302`·`303`·`304`·`310`·`311`)이 적용됩니다.
+
+`retry_count` 는 전송 실패 시 건별 재시도 횟수입니다(`1`~`25`, 기본 `10`). 범위 밖이면 `11304` 로 거부되고, 생략하면 저장된 기존 값이 유지됩니다.
 
 서명 검증은 다음 헤더로 합니다. 타임스탬프가 5분 이상 지난 요청은 거부하세요(replay 방지).
 

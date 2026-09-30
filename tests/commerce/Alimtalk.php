@@ -95,7 +95,8 @@ try {
     // print_r($bootpay->alimtalkWebhook->update(array(
     //     'url' => 'https://example.com/hooks/alimtalk',   // https 만 허용
     //     'events' => array(301, 302, 303, 304, 310, 311),
-    //     'enabled' => true
+    //     'enabled' => true,
+    //     'retry_count' => 10                             // 1~25, 기본 10
     // )));
     // print_r($bootpay->alimtalkWebhook->test());          // ⚠️ 설정된 URL 로 실제 요청이 나간다
     // print_r($bootpay->alimtalkWebhook->rotateSecret());  // ⚠️ 이 응답에서만 secret 원문을 준다

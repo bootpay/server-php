@@ -1,3 +1,22 @@
+### 2.10.1
+
+Ruby SDK parity — 알림톡 웹훅 설정에 재시도 횟수 `retry_count` 추가 (`e424a9d`). **기존 메서드·파라미터 제거 없음.**
+
+`alimtalkWebhook->update()` 가 `retry_count` 를 받는다. 웹훅 전송이 실패했을 때 건별로 몇 번까지 재시도할지 정한다.
+
+- 범위는 `1`~`25` 이고 기본값은 `10` 이다. 범위 밖이면 `11304` 로 거부된다.
+- 생략(`null`)하면 키 자체를 보내지 않으므로 서버에 저장된 기존 값이 유지된다.
+- 실제 재시도 횟수는 전송 이력(`alimtalkWebhook->deliveries()`)의 `retry_count` · `max_retry` 로 확인한다.
+
+```php
+$response = $bootpay->alimtalkWebhook->update(array(
+    'url'         => 'https://example.com/hooks/alimtalk',
+    'events'      => array(301, 302, 303, 304, 310, 311),
+    'enabled'     => true,
+    'retry_count' => 25
+));
+```
+
 ### 2.10.0
 
 Ruby SDK parity — 커머스 게시판 API 28종 추가 (`144be88`). **기존 메서드·파라미터 제거 없음.**

@@ -46,13 +46,15 @@ class AlimtalkWebhookModule
      *   304 문자(LMS) 대체발송 전환 / 310 검수 승인 / 311 검수 반려 / 320 수신거부 등록(기본 미구독)
      * events 를 비우면 기본 구독셋(301 · 302 · 303 · 304 · 310 · 311)이 적용된다.
      *
+     * retry_count: 건별 재시도 횟수(1~25, 기본 10). 범위 밖이면 11304. 생략하면 기존 값을 유지한다.
+     *
      * ⚠️ enabled 는 false 도 그대로 전송된다(미지정 null 과 다르다).
-     * @param array|null $params url / events / enabled
+     * @param array|null $params url / events / enabled / retry_count
      * @return object
      */
     public function update($params = null)
     {
-        $payload = $this->pick($params, array('url', 'events', 'enabled'));
+        $payload = $this->pick($params, array('url', 'events', 'enabled', 'retry_count'));
 
         return $this->bootpay->put('alimtalk/webhook', $this->emptyToObject($payload), $this->userHeaders());
     }

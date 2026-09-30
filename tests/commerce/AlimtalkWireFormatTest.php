@@ -571,6 +571,30 @@ class AlimtalkWireFormatTest extends TestCase
         );
     }
 
+    /** e424a9d — retry_count(건별 재시도 횟수 1~25, 기본 10)를 그대로 실어 보낸다 */
+    public function testWebhookUpdateCarriesRetryCount()
+    {
+        $this->api->alimtalkWebhook->update(array(
+            'url' => 'https://example.com/hook',
+            'retry_count' => 25
+        ));
+        $this->assertAlimtalkCall('PUT', 'alimtalk/webhook');
+        $this->assertSame(
+            array('url' => 'https://example.com/hook', 'retry_count' => 25),
+            $this->lastCall()['data']
+        );
+    }
+
+    /** 미지정이면 키째로 빠진다 — 서버에 저장된 기존 재시도 횟수가 유지되어야 하기 때문이다 */
+    public function testWebhookUpdateOmitsRetryCountWhenNull()
+    {
+        $this->api->alimtalkWebhook->update(array(
+            'url' => 'https://example.com/hook',
+            'retry_count' => null
+        ));
+        $this->assertArrayNotHasKey('retry_count', $this->lastCall()['data']);
+    }
+
     public function testWebhookUpdateWithoutParamsSendsEmptyJsonObject()
     {
         $this->api->alimtalkWebhook->update();
