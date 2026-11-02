@@ -364,7 +364,7 @@ class CommerceWireFormatTest extends TestCase
         $this->assertEquals('POST', $call['method']);
         $this->assertEquals('products', $call['url']);
         $this->assertEquals(array('name' => 'product', 'price' => 1000), $call['data']);
-        $this->assertEquals('manager', $this->headerValue('BOOTPAY-ROLE'));
+        $this->assertEquals('user', $this->headerValue('BOOTPAY-ROLE'));
         $this->assertNotNull($this->headerValue('Idempotency-Key'));
     }
 
@@ -376,7 +376,7 @@ class CommerceWireFormatTest extends TestCase
         $this->assertEquals('multipart', $call['type']);
         $this->assertEquals('products', $call['url']);
         $this->assertEquals(array('/tmp/a.png', '/tmp/b.png'), $call['files']);
-        $this->assertEquals('manager', $this->headerValue('BOOTPAY-ROLE'));
+        $this->assertEquals('user', $this->headerValue('BOOTPAY-ROLE'));
         $this->assertEquals('pc-key', $this->headerValue('Idempotency-Key'));
     }
 
@@ -387,14 +387,25 @@ class CommerceWireFormatTest extends TestCase
 
         $this->assertEquals('products/prod-1/status', $call['url']);
         $this->assertEquals(array('status' => 1), $call['data']);
-        $this->assertEquals('manager', $this->headerValue('BOOTPAY-ROLE'));
+        $this->assertEquals('user', $this->headerValue('BOOTPAY-ROLE'));
     }
 
-    public function testProductDeleteUsesManagerRole()
+    public function testProductUpdateUsesUserRole()
+    {
+        $this->api->product->update(array('product_id' => 'prod-1', 'name' => 'renamed'), 'pu-key');
+        $call = $this->lastCall();
+
+        $this->assertEquals('PUT', $call['method']);
+        $this->assertEquals('products/prod-1', $call['url']);
+        $this->assertEquals('user', $this->headerValue('BOOTPAY-ROLE'));
+        $this->assertEquals('pu-key', $this->headerValue('Idempotency-Key'));
+    }
+
+    public function testProductDeleteUsesUserRole()
     {
         $this->api->product->delete('prod-1');
         $this->assertEquals('DELETE', $this->lastCall()['method']);
-        $this->assertEquals('manager', $this->headerValue('BOOTPAY-ROLE'));
+        $this->assertEquals('user', $this->headerValue('BOOTPAY-ROLE'));
     }
 
     // ---------- 9. Invoice ----------

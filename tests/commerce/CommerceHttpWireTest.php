@@ -141,7 +141,7 @@ class CommerceHttpWireTest extends WireEchoTestCase
         $this->assertEquals('/v1/products', $res->uri);
         $this->assertEquals('application/json', self::echoHeader($res, 'Content-Type'));
         $this->assertEquals(array('name' => '상품', 'display_price' => 1000), json_decode($res->raw_body, true));
-        $this->assertEquals('manager', self::echoHeader($res, 'BOOTPAY-ROLE'));
+        $this->assertEquals('user', self::echoHeader($res, 'BOOTPAY-ROLE'));
     }
 
     public function testProductCreateWithImagesTransmitsMultipartWithBoundaryAndIndexedImages()
@@ -177,7 +177,7 @@ class CommerceHttpWireTest extends WireEchoTestCase
             $this->assertArrayHasKey(0, $images);
             $this->assertArrayHasKey(1, $images);
 
-            $this->assertEquals('manager', self::echoHeader($res, 'BOOTPAY-ROLE'));
+            $this->assertEquals('user', self::echoHeader($res, 'BOOTPAY-ROLE'));
             $this->assertEquals('pc-key', self::echoHeader($res, 'Idempotency-Key'));
             $this->assertEquals('Basic ' . base64_encode('ck:sk'), self::echoHeader($res, 'Authorization'));
         } finally {

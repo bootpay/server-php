@@ -86,7 +86,7 @@ class ProductModule
     }
 
     /**
-     * 상품 생성 (manager 전용)
+     * 상품 생성 (BOOTPAY-ROLE: user)
      * POST /v1/products
      * $imagePaths 가 있으면 multipart/form-data (images[0], images[1] ... 인덱싱), 없으면 JSON 으로 보낸다.
      * @param array $product 상품 정보 (여기 명시되지 않은 값도 서버 _product_params 로 그대로 전달된다)
@@ -97,7 +97,7 @@ class ProductModule
     public function create($product, $imagePaths = null, $idempotencyKey = null)
     {
         $payload = $this->compact($product);
-        $headers = $this->managerHeaders($idempotencyKey);
+        $headers = $this->userHeaders($idempotencyKey);
 
         if ($imagePaths === null || count($imagePaths) === 0) {
             return $this->bootpay->post('products', $payload, $headers);
@@ -134,7 +134,7 @@ class ProductModule
     }
 
     /**
-     * 상품 수정 (manager 전용)
+     * 상품 수정 (BOOTPAY-ROLE: user)
      * PUT /v1/products/{product_id}
      * 바뀐 값만 보내면 된다. ⚠️ category_id 는 키 존재 여부로 '해제 의사'를 판별하므로 주의.
      * @param array $product 상품 정보 (product_id 필수)
@@ -151,12 +151,12 @@ class ProductModule
         return $this->bootpay->put(
             "products/{$productId}",
             $this->compact($product),
-            $this->managerHeaders($idempotencyKey)
+            $this->userHeaders($idempotencyKey)
         );
     }
 
     /**
-     * 상품 판매/노출 상태 변경 (manager 전용)
+     * 상품 판매/노출 상태 변경 (BOOTPAY-ROLE: user)
      * PUT /v1/products/{product_id}/status
      * ⚠️ 재고(stock)는 여기가 아니라 update 로 바꾼다.
      * @param array $params 상태 변경 파라미터 (product_id 필수 / idempotency_key 는 Idempotency-Key 헤더로 전송된다)
@@ -174,12 +174,12 @@ class ProductModule
         return $this->bootpay->put(
             "products/{$productId}/status",
             $this->compact($params),
-            $this->managerHeaders($idempotencyKey)
+            $this->userHeaders($idempotencyKey)
         );
     }
 
     /**
-     * 상품 삭제 (manager 전용)
+     * 상품 삭제 (BOOTPAY-ROLE: user)
      * DELETE /v1/products/{product_id}
      * @param string $productId 상품 ID
      * @param string|null $idempotencyKey 미지정시 자동 생성
@@ -187,18 +187,19 @@ class ProductModule
      */
     public function delete($productId, $idempotencyKey = null)
     {
-        return $this->bootpay->delete("products/{$productId}", $this->managerHeaders($idempotencyKey));
+        return $this->bootpay->delete("products/{$productId}", $this->userHeaders($idempotencyKey));
     }
 
     /**
      * 상품 쓰기(등록/수정/삭제/상태변경) 요청 헤더
-     * 서버가 manager scope 를 요구한다.
+     * 26-11-02 BOOTPAY-ROLE manager → user. 서버 스코프는 user:product_create/update/delete/status 뿐이라
+     * manager 로 보내면 manager:product_* 를 찾다 401 API_ROLE_NOT_SUPPORT(-50) 로 막혔다.
      */
-    private function managerHeaders($idempotencyKey = null)
+    private function userHeaders($idempotencyKey = null)
     {
         return array(
             'Idempotency-Key: ' . ($idempotencyKey ?: BootpayCommerceApi::generateIdempotencyKey()),
-            'BOOTPAY-ROLE: manager'
+            'BOOTPAY-ROLE: user'
         );
     }
 
