@@ -22,6 +22,8 @@
             <file>tests/commerce/CommerceScopeTest.php</file>
             <file>tests/commerce/AlimtalkWireFormatTest.php</file>
             <file>tests/commerce/BoardWireFormatTest.php</file>
+            <file>tests/commerce/DepositWireFormatTest.php</file>
+            <file>tests/commerce/PayoutWireFormatTest.php</file>
         </testsuite>
         <testsuite name="PG">
             <directory>tests/pg</directory>

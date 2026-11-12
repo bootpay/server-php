@@ -20,6 +20,8 @@ use Bootpay\ServerPhp\Commerce\CartModule;
 use Bootpay\ServerPhp\Commerce\MallSettingModule;
 use Bootpay\ServerPhp\Commerce\WebhookModule;
 use Bootpay\ServerPhp\Commerce\NoticeModule;
+use Bootpay\ServerPhp\Commerce\DepositModule;
+use Bootpay\ServerPhp\Commerce\PayoutModule;
 use Bootpay\ServerPhp\Commerce\FaqModule;
 use Bootpay\ServerPhp\Commerce\InquiryModule;
 use Bootpay\ServerPhp\Commerce\ProductQnaModule;
@@ -58,7 +60,7 @@ class BootpayCommerceApi
 
     private static $postMethods = array('POST', 'PUT');
     private static $apiVersion = '2.5.0';
-    private static $sdkVersion = '2.10.1';
+    private static $sdkVersion = '2.11.0';
 
     public $user;
     public $userGroup;
@@ -78,6 +80,8 @@ class BootpayCommerceApi
     public $mallSetting;
     public $webhook;
     public $notice;
+    public $deposit;
+    public $payout;
     public $faq;
     public $inquiry;
     public $productQna;
@@ -118,6 +122,8 @@ class BootpayCommerceApi
         $this->mallSetting = new MallSettingModule($this);
         $this->webhook = new WebhookModule($this);
         $this->notice = new NoticeModule($this);
+        $this->deposit = new DepositModule($this);
+        $this->payout = new PayoutModule($this);
         $this->faq = new FaqModule($this);
         $this->inquiry = new InquiryModule($this);
         $this->productQna = new ProductQnaModule($this);

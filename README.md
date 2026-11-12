@@ -58,6 +58,8 @@ PHP 언어로 작성된 어플리케이션, 프레임워크 등에서 사용가�
     - [9-3. 1:1 문의](#9-3-11-문의)
     - [9-4. 상품문의](#9-4-상품문의)
     - [9-5. 상품평](#9-5-상품평)
+  - [10. 뱅크알람 입금대기](#10-뱅크알람-입금대기-무통장-입금-자동-확인)
+  - [11. 입점사 지급 요청](#11-입점사-지급-요청)
 
 ### 기타
 - [Example 프로젝트](#example-프로젝트)
@@ -1157,6 +1159,114 @@ $response = $bootpay->productReview->reply(array(
 > 수정은 작성 후 7일 이내만 됩니다(`REVIEW_EDIT_TIME_EXPIRED`). 삭제하면 지급된 적립금 회수·상품 통계 차감이 함께 일어납니다.
 >
 > 상품 상세의 공개 상품평 목록은 이 모듈이 아니라 `GET /v1/products/{id}/reviews` 를 씁니다.
+
+## 10. 뱅크알람 입금대기 (무통장 입금 자동 확인)
+
+가맹점 서버가 아직 입금되지 않은 주문을 등록하면, 판매자 폰의 입금 알림 중 **금액 · 입금자명**이 맞는 것을
+뱅크알람이 그 주문에 연결해 입금을 확인하고 입금 웹훅으로 알립니다.
+전부 supervisor 전용이며, 인스턴스 role 과 무관하게 `BOOTPAY-ROLE: supervisor` 로 나갑니다.
+
+각 메서드는 다른 Commerce API 와 같은 원본 응답 객체를 반환합니다. 실제 데이터는 `$response->data` 에 있습니다.
+
+```php
+use Bootpay\ServerPhp\Commerce\DepositModule;
+
+// 판매자 입금 계좌 목록 — 첫 계좌가 대표 계좌(primary: true)
+$response = $bootpay->deposit->accounts();
+$accounts = $response->data->accounts;
+
+// 웹훅 서명 비밀값 발급 — ⚠️ 원문은 이 응답에서만 받습니다. 다시 부르면 바뀝니다
+// 선택한 멱등키를 직접 전달할 수도 있습니다. 미지정하면 호출마다 UUID 를 새로 만듭니다.
+$response = $bootpay->deposit->webhookSecret('deposit-secret-request-1');
+$secret = $response->data->secret;
+
+// 입금대기 등록 — 같은 merchant_order_id 로 같은 금액·입금자명·계좌를 다시 보내면 기존 주문을 돌려줍니다
+// (하나라도 다르면 18110 BANK_DEPOSIT_MERCHANT_ID_CONFLICT)
+$response = $bootpay->deposit->create(array(
+    'merchant_order_id' => 'ORDER_1234',
+    'price'             => 15000,
+    'depositor'         => '홍길동',              // 은행 입금 알림과 맞춰 볼 이름
+    'buyer_name'        => '홍길동',              // 미지정시 입금자명
+    'buyer_email'       => 'buyer@example.com',   // 주면 입금 안내 · 확인 메일 (무료)
+    'buyer_phone'       => '01012345678',         // 아래 구매자 알림톡을 사용할 때 필수
+    'account_id'        => $accounts[0]->id,      // 미지정시 대표 계좌
+    'webhook_url'       => 'https://example.com/hooks/deposit', // 비밀값을 먼저 발급받아야 합니다(18131)
+    // 구매자 알림톡 (유료) — buyer_phone 필수, link 는 https
+    'notify'            => array(
+        'deposit_guide' => true,
+        'deposit_paid'  => true,
+        'link'          => 'https://example.com/orders/ORDER_1234'
+    ),
+    'idempotency_key'   => 'deposit-create-request-1'
+));
+
+// 조회 · 취소 — 가맹점 주문번호 또는 부트페이 주문번호
+$response = $bootpay->deposit->detail('ORDER_1234');
+// status: awaiting · paid · expired · cancelled
+$response = $bootpay->deposit->cancel('ORDER_1234', 'deposit-cancel-request-1');
+// 이미 닫힌 주문은 그대로 돌려줍니다
+```
+
+`merchant_order_id` · `price` · `depositor` 는 필수입니다. `order_name` · `memo` · `buyer_name` ·
+`buyer_phone` · `buyer_email` · `account_id` · `webhook_url` · `notify` 는 선택이며, `null` 은 요청 본문에서 빠지고
+명시적인 `false` 는 그대로 전송됩니다. `detail()` · `cancel()` 의 id 는 경로 세그먼트로 URL 인코딩됩니다.
+
+입금 웹훅은 다음 형식으로 서명됩니다.
+
+```
+X-Bootpay-Signature: sha256=HMAC_SHA256(secret, "{X-Bootpay-Timestamp}.{raw_body}")
+```
+
+이벤트 코드는 `DepositModule` 상수를 사용합니다.
+
+- `DepositModule::BANK_DEPOSIT_WEBHOOK_EVENT_RECEIVED` (`400`)
+- `DepositModule::BANK_DEPOSIT_WEBHOOK_EVENT_MATCHED` (`401`)
+- `DepositModule::BANK_DEPOSIT_WEBHOOK_EVENT_AMBIGUOUS` (`402`)
+- `DepositModule::BANK_DEPOSIT_WEBHOOK_EVENT_UNMATCHED` (`403`)
+- `DepositModule::BANK_DEPOSIT_WEBHOOK_EVENT_CONFIRMED_MANUALLY` (`404`)
+- `DepositModule::BANK_DEPOSIT_WEBHOOK_EVENT_EXPIRED` (`405`)
+- `DepositModule::BANK_DEPOSIT_WEBHOOK_EVENT_CANCELLED` (`406`)
+- `DepositModule::BANK_DEPOSIT_WEBHOOK_EVENT_REVERTED` (`407`)
+
+## 11. 입점사 지급 요청
+
+가맹점 지정 금액(`manual`) 정산 방식의 쇼핑몰이 입점사와 지급액을 정해 지급을 요청합니다.
+요청은 지급 원장에 등록되며 실제 송금은 부트페이 배치가 약 5분 간격으로 처리합니다.
+전부 supervisor 전용이며, 인스턴스 role 과 무관하게 `BOOTPAY-ROLE: supervisor` 로 나갑니다.
+
+```php
+// 지급 요청 — 같은 merchant_payout_id 로 다시 보내면 처음 만든 항목을 그대로 돌려줍니다
+$payout = $bootpay->payout->create(array(
+    'sub_seller_id'      => 'SUB_SELLER_ID',        // PG 판매자 등록을 마친 입점사
+    'amount'             => 150000,                 // 1원 이상 정수
+    'merchant_payout_id' => 'PAYOUT_20261112_001',
+    'order_number'       => 'ORDER_1234',           // 선택
+    'payout_date'        => '2026-11-20',            // 선택, YYYY-MM-DD (미지정시 오늘)
+    'idempotency_key'    => 'payout-create-request-1'
+));
+
+// 조회 — merchant_payout_id 또는 지급 항목 id
+$payout = $bootpay->payout->detail('PAYOUT_20261112_001');
+
+// 목록 — 지정한 필터만 쿼리에 보내며 page/limit 기본값을 SDK가 임의로 넣지 않습니다
+$payoutItems = $bootpay->payout->getList(array(
+    'status'        => 'ready',
+    'sub_seller_id' => 'SUB_SELLER_ID',
+    'from'          => '2026-11-01',
+    'to'            => '2026-11-30',
+    'page'          => 1,
+    'limit'         => 20
+));
+```
+
+`sub_seller_id` · `amount` · `merchant_payout_id` 는 필수이고 `order_number` · `payout_date` 는 선택입니다.
+선택값이 `null` 이면 요청에서 빠집니다. `detail()` 의 id 는 경로 세그먼트 전체를 URL 인코딩합니다.
+`create()` · `detail()` 은 지급 항목 객체를, `getList()` 는 전체 개수 필드나 envelope 없는 지급 항목 배열을 반환합니다.
+
+지급 항목 필드는 `id`, `merchant_payout_id`, `sub_seller_id`, `amount`, `status`, `payout_date`,
+`order_number`, `last_code`, `last_message`, `created_at`, `updated_at` 입니다.
+`order_number` · `last_code` · `last_message` 는 `null` 일 수 있습니다.
+`status` 는 `ready`, `held`, `sending`, `requested`, `processing`, `succeeded`, `failed`, `cancelled`, `unknown`, `void` 중 하나입니다.
 
 
 ## Role 설정

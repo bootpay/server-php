@@ -1,4 +1,42 @@
-### 2.10.1
+### 2.11.0
+
+#### 뱅크알람 입금대기 API 5종 — `$bootpay->deposit`
+
+가맹점 서버가 아직 입금되지 않은 주문을 등록하면, 판매자 폰의 입금 알림 중 금액·입금자명이 맞는 것을
+뱅크알람이 그 주문에 연결해 입금을 확인하고 입금 웹훅으로 알린다.
+
+- `accounts()` — `GET /v1/sdk/deposits/accounts`. 판매자 입금 계좌 목록(첫 계좌가 대표, `primary: true`).
+- `webhookSecret($idempotencyKey = null)` — `POST /v1/sdk/deposits/webhook_secret`. 웹훅 서명 비밀값을 새로 발급한다.
+  ⚠️ 원문은 이 응답에서만 오고, 부를 때마다 바뀐다.
+- `create($params)` — `POST /v1/sdk/deposits`. `merchant_order_id` · `price` · `depositor` 필수,
+  `order_name`(미지정시 '무통장 입금') · `memo` · `buyer_name` · `buyer_phone` · `buyer_email` · `account_id` · `webhook_url` ·
+  `notify`(구매자 알림톡, 유료) 선택.
+  같은 `merchant_order_id` 로 금액·입금자명·계좌가 같은 재호출은 기존 주문을 돌려주고, 하나라도 다르면 `18110` 으로 거절된다.
+- `detail($id)` / `cancel($id, $idempotencyKey = null)` — `GET` · `DELETE /v1/sdk/deposits/{id}`.
+  id 는 가맹점 주문번호 또는 부트페이 주문번호이며 경로 구분자가 섞일 수 있어 URL 인코딩한다.
+- 전부 supervisor scope(`order_deposit_*`)라 인스턴스 role 과 무관하게 `BOOTPAY-ROLE: supervisor` 로 나간다.
+  `Idempotency-Key` 는 다른 커머스 요청처럼 미지정 시 자동 생성한다.
+- 웹훅 이벤트 상수 `DepositModule::BANK_DEPOSIT_WEBHOOK_EVENT_*`(400~407)를 추가했다.
+- 네트워크 없는 요청 계약 테스트(`DepositWireFormatTest`)와 실행 예제 `tests/commerce/Deposit.php` 를 추가했다 (조회만 기본 실행, 부작용 호출은 주석).
+
+#### 입점사 지급 요청 API 3종 — `$bootpay->payout`
+
+- `create($params)` — `POST /v1/sdk/payouts`. `sub_seller_id` · `amount` · `merchant_payout_id` 필수,
+  `order_number` · `payout_date`(YYYY-MM-DD) 선택. 같은 `merchant_payout_id` 재호출은 처음 항목을 돌려준다.
+- `detail($id, $idempotencyKey = null)` — `GET /v1/sdk/payouts/{id}`. id 는 `merchant_payout_id` 또는 지급 항목 id 이며 URL 인코딩한다.
+- `getList($params = null)` — `GET /v1/sdk/payouts`. `status` · `sub_seller_id` · `from` · `to` · `page` · `limit` 중 지정한 필터만 보낸다.
+  응답은 전체 개수나 envelope 없는 지급 항목 배열이다.
+- 전부 supervisor scope(`payout_*`)라 인스턴스 role 과 무관하게 `BOOTPAY-ROLE: supervisor` 로 나간다.
+  `Idempotency-Key` 는 직접 지정할 수 있고, 미지정 시 호출마다 새로 생성한다.
+- 네트워크 없는 요청 계약 테스트(`PayoutWireFormatTest`)와 실행 예제 `tests/commerce/Payout.php` 를 추가했다.
+  예제의 `create()` 는 실제 지급 원장 항목을 만들지 않도록 기본 주석 처리했다.
+
+#### 상품 등록·수정·삭제·상태변경 `BOOTPAY-ROLE` manager → user (봇 sync `9a8bb2bf`)
+
+`product->create()` · `update()` · `delete()` · `status()` 는 서버 scope 가 `user:product_*` 만 있어 manager 로 보내면
+401 `API_ROLE_NOT_SUPPORT(-50)` 로 거절된다. 이 네 요청은 인스턴스 role 을 바꾸지 않고 요청별 `BOOTPAY-ROLE: user` 로 보낸다.
+
+#### 알림톡 웹훅 설정에 `retry_count` (봇 sync `e424a9d`)
 
 Ruby SDK parity — 알림톡 웹훅 설정에 재시도 횟수 `retry_count` 추가 (`e424a9d`). **기존 메서드·파라미터 제거 없음.**
 
