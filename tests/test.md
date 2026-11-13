@@ -36,7 +36,7 @@ const CURRENT_ENV = 'production';
 프로젝트 루트에서 의존성을 설치합니다:
 
 ```bash
-cd /Users/taesupyoon/bootpay/server/sdk/php
+cd backend-php  # 리포 루트
 composer install
 ```
 
