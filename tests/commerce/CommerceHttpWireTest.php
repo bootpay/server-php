@@ -218,6 +218,25 @@ class CommerceHttpWireTest extends WireEchoTestCase
         $this->assertEquals('user', self::echoHeader($res, 'BOOTPAY-ROLE'));
     }
 
+    public function testInvoiceCreateForcesUserRole()
+    {
+        // 서버 스코프는 user:invoice_create 뿐 — 인스턴스 role 이 manager 여도 user 로 보낸다
+        $this->api->asManager();
+        try {
+            $res = $this->api->invoice->create(array('name' => '청구서', 'price' => 1000));
+            $this->assertEquals('POST', $res->method);
+            $this->assertEquals('/v1/invoices', $res->uri);
+            $this->assertEquals('user', self::echoHeader($res, 'BOOTPAY-ROLE'));
+            $this->assertNotEmpty(self::echoHeader($res, 'Idempotency-Key'));
+
+            $keyed = $this->api->invoice->create(array('name' => '청구서'), 'idem-invoice');
+            $this->assertEquals('idem-invoice', self::echoHeader($keyed, 'Idempotency-Key'));
+            $this->assertEquals('manager', $this->api->getRole());
+        } finally {
+            $this->api->asUser();
+        }
+    }
+
     public function testOrderCancelApproveLegacyArgumentStillWorksOnTheWire()
     {
         $res = $this->api->orderCancel->approve(array(

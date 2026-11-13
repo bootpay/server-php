@@ -56,12 +56,15 @@ class InvoiceModule
 
     /**
      * 청구서 생성
+     * POST /v1/invoices — 서버 스코프는 user:invoice_create 뿐이라 인스턴스 role 과 무관하게
+     * BOOTPAY-ROLE: user 로 보낸다 (manager/supervisor 로 나가면 401 API_ROLE_NOT_SUPPORT).
      * @param array $invoice 청구서 정보
+     * @param string|null $idempotencyKey 미지정시 자동 생성
      * @return object
      */
-    public function create($invoice)
+    public function create($invoice, $idempotencyKey = null)
     {
-        return $this->bootpay->post('invoices', $invoice);
+        return $this->bootpay->post('invoices', $invoice, $this->invoiceHeaders($idempotencyKey));
     }
 
     /**
