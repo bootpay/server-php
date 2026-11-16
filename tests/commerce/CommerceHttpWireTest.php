@@ -397,4 +397,42 @@ class CommerceHttpWireTest extends WireEchoTestCase
         $this->assertEquals('/v1/users/session', $res->uri);
         $this->assertEquals('jwt-1', self::echoHeader($res, 'Bootpay-User-JWT'));
     }
+    /** 26-11-16: 빈 id 로 상세 메서드를 부르면 목록(orders/)으로 라우팅되지 않도록 요청 자체를 보내지 않는다 */
+    public function testBlankIdDetailIsNotSentAndReturnsFailure()
+    {
+        $res = $this->api->order->detail('');
+
+        $this->assertFalse($res->success);
+        $this->assertStringContainsString('빈 id', $res->message);
+        $this->assertFalse(property_exists($res, 'method'), '서버로 요청이 나가면 안 된다');
+    }
+
+    public function testBlankPathSegmentInRawRequestIsNotSent()
+    {
+        $res = $this->api->getRaw('alimtalk/templates//export');
+
+        $this->assertFalse($res->success);
+        $this->assertSame('', $res->body);
+        $this->assertSame(0, $res->status);
+    }
+
+    public function testBlankPathSegmentInMultipartRequestIsNotSent()
+    {
+        $res = $this->api->requestMultipart('POST', 'products/', array('name' => '상품'));
+
+        $this->assertFalse($res->success);
+        $this->assertFalse(property_exists($res, 'method'));
+    }
+
+    public function testHasBlankPathSegment()
+    {
+        $this->assertTrue(BootpayCommerceApi::hasBlankPathSegment(''));
+        $this->assertTrue(BootpayCommerceApi::hasBlankPathSegment('/'));
+        $this->assertTrue(BootpayCommerceApi::hasBlankPathSegment('orders/'));
+        $this->assertTrue(BootpayCommerceApi::hasBlankPathSegment('orders/?page=1'));
+        $this->assertTrue(BootpayCommerceApi::hasBlankPathSegment('orders//purchases'));
+        $this->assertFalse(BootpayCommerceApi::hasBlankPathSegment('orders/o-1'));
+        $this->assertFalse(BootpayCommerceApi::hasBlankPathSegment('/orders/o-1'));
+        $this->assertFalse(BootpayCommerceApi::hasBlankPathSegment('users?redirect=https://a.b/c/'));
+    }
 }

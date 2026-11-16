@@ -1,5 +1,13 @@
 ### Unreleased
 
+#### 빈 id 로 상세 메서드를 부르면 목록이 돌아오던 문제 수정 (ruby `79594ea` parity)
+
+- `order->detail('')` 처럼 id 가 비면 경로가 `orders/` · `orders//purchases` 가 되어 서버가 목록·다른 엔드포인트로 라우팅해
+  오류 없이 엉뚱한 응답이 왔다. 이제 `request` · `requestRaw` · `requestMultipart` 는 경로에 빈 조각(끝이 `/` 이거나 `//` 포함, 쿼리 제외)이
+  있으면 요청을 보내지 않고 `{success: false, message: '요청 경로에 빈 id 가 있습니다: ...'}` 를 돌려준다.
+  (`requestRaw` 는 `body: ''`, `content_type: ''`, `status: 0` 도 함께 싣는다.)
+- 판별 로직은 `BootpayCommerceApi::hasBlankPathSegment($url)` 로 공개한다.
+
 #### 주문 발송 정보 조회·발송처리 추가 (ruby `b762095` parity)
 
 - `order->purchases($orderNumber, $idempotencyKey = null)` — `GET /v1/orders/{order_number}/purchases`.

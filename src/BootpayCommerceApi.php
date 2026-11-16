@@ -359,8 +359,41 @@ class BootpayCommerceApi
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
     }
 
+    /**
+     * 경로 조각이 빈 요청인지 판별한다.
+     *
+     * 26-11-16: 빈 id 로 상세 메서드를 부르면 "orders/" 처럼 / 로 끝나거나 "orders//purchases" 처럼 // 가 생겨
+     * 서버가 목록이나 다른 엔드포인트로 라우팅한다(오류 없이 엉뚱한 응답). 이런 요청은 보내지 않고 실패 응답을 돌려준다.
+     * @param string $url
+     * @return bool
+     */
+    public static function hasBlankPathSegment($url)
+    {
+        $parts = explode('?', (string)$url, 2);
+        $path = preg_replace('#\A/#', '', $parts[0]);
+        return $path === '' || substr($path, -1) === '/' || strpos($path, '//') !== false;
+    }
+
+    /**
+     * 빈 경로 조각 요청에 대한 실패 응답 (요청은 보내지 않는다)
+     * @param string $url
+     * @return object { success: false, message: '...' }
+     */
+    private static function blankPathSegmentFailure($url)
+    {
+        return (object)array(
+            'success' => false,
+            'message' => '요청 경로에 빈 id 가 있습니다: ' . $url
+        );
+    }
+
     public function request($method, $url, $data = null, $headers = null, $useBasicAuth = false)
     {
+        // 26-11-16 경로 id 가 비면 요청하지 않는다(hasBlankPathSegment 참고).
+        if (self::hasBlankPathSegment($url)) {
+            return self::blankPathSegmentFailure($url);
+        }
+
         if (!isset($headers)) {
             $headers = array();
         }
@@ -414,6 +447,15 @@ class BootpayCommerceApi
      */
     public function requestRaw($method, $url, $headers = null)
     {
+        // 26-11-16 경로 id 가 비면 요청하지 않는다(hasBlankPathSegment 참고).
+        if (self::hasBlankPathSegment($url)) {
+            $failure = self::blankPathSegmentFailure($url);
+            $failure->body = '';
+            $failure->content_type = '';
+            $failure->status = 0;
+            return $failure;
+        }
+
         $fullUrl = $this->entrypoints($url);
 
         $rawHeaders = array(
@@ -461,6 +503,11 @@ class BootpayCommerceApi
 
     public function requestMultipart($method, $url, $data = null, $files = null, $headers = null)
     {
+        // 26-11-16 경로 id 가 비면 요청하지 않는다(hasBlankPathSegment 참고).
+        if (self::hasBlankPathSegment($url)) {
+            return self::blankPathSegmentFailure($url);
+        }
+
         $fullUrl = $this->entrypoints($url);
 
         $channel = curl_init($fullUrl);
