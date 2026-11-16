@@ -131,6 +131,15 @@ class DepositWireFormatTest extends TestCase
         $this->assertSame(array(), $this->api->calls);
     }
 
+    public function testAccountsAndDetailHonorExplicitIdempotencyKey()
+    {
+        $this->api->deposit->accounts('acc-key');
+        $this->assertDepositCall('GET', 'sdk/deposits/accounts', 'acc-key');
+
+        $this->api->deposit->detail('d-1', 'detail-key');
+        $this->assertDepositCall('GET', 'sdk/deposits/d-1', 'detail-key');
+    }
+
     public function testDetailEncodesMerchantOrderId()
     {
         $this->api->deposit->detail('a/b');

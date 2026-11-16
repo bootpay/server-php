@@ -32,11 +32,12 @@ class DepositModule
     /**
      * 판매자 입금 계좌 목록
      * GET /v1/sdk/deposits/accounts
+     * @param string|null $idempotencyKey 멱등키 (미지정시 자동 생성)
      * @return object API 응답; data.accounts: [{id, bank_name, account_no, holder, primary}] — 첫 계좌가 대표 계좌다
      */
-    public function accounts()
+    public function accounts($idempotencyKey = null)
     {
-        return $this->bootpay->get('sdk/deposits/accounts', $this->supervisorHeaders());
+        return $this->bootpay->get('sdk/deposits/accounts', $this->supervisorHeaders($idempotencyKey));
     }
 
     /**
@@ -94,11 +95,12 @@ class DepositModule
      * GET /v1/sdk/deposits/{id}
      * 기한이 지났으면 조회 시점에 만료(expired)로 닫힌다.
      * @param string $depositId 가맹점 주문번호 또는 부트페이 주문번호
+     * @param string|null $idempotencyKey 멱등키 (미지정시 자동 생성)
      * @return object API 응답; data: 입금대기 주문 (create 응답과 동일)
      */
-    public function detail($depositId)
+    public function detail($depositId, $idempotencyKey = null)
     {
-        return $this->bootpay->get('sdk/deposits/' . rawurlencode($depositId), $this->supervisorHeaders());
+        return $this->bootpay->get('sdk/deposits/' . rawurlencode($depositId), $this->supervisorHeaders($idempotencyKey));
     }
 
     /**
