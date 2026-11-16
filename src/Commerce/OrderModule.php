@@ -26,7 +26,7 @@ class OrderModule
     public function getList($params = null)
     {
         $queryString = $this->buildQueryString($params);
-        return $this->bootpay->get('orders' . $queryString);
+        return $this->bootpay->get('orders' . $queryString, array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -36,7 +36,7 @@ class OrderModule
      */
     public function detail($orderId)
     {
-        return $this->bootpay->get("orders/{$orderId}");
+        return $this->bootpay->get("orders/{$orderId}", array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -51,7 +51,7 @@ class OrderModule
             'user_group_id' => $userGroupId,
             'search_date' => $searchDate
         ));
-        return $this->bootpay->get("orders/month?{$query}");
+        return $this->bootpay->get("orders/month?{$query}", array('BOOTPAY-ROLE: user'));
     }
 
     /**

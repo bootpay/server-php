@@ -54,7 +54,7 @@ class FaqModule
         $params = $this->normalize($params, 'faq_id');
         $faqId = $this->requireValue($params, 'faq_id');
 
-        return $this->bootpay->get("faqs/{$faqId}", $this->headers($params));
+        return $this->bootpay->get("faqs/{$faqId}", $this->headers($params, (isset($params['supervisor']) && $params['supervisor']) ? 'supervisor' : $this->bootpay->userOrSupervisorRole()));
     }
 
     /**

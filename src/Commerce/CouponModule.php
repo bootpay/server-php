@@ -21,7 +21,7 @@ class CouponModule
     public function getList($params = null)
     {
         $queryString = $this->buildQueryString($params);
-        return $this->bootpay->get('coupon' . $queryString);
+        return $this->bootpay->get('coupon' . $queryString, array('BOOTPAY-ROLE: ' . $this->bootpay->userOrSupervisorRole()));
     }
 
     /**
@@ -30,7 +30,7 @@ class CouponModule
      */
     public function available()
     {
-        return $this->bootpay->get('coupon/available');
+        return $this->bootpay->get('coupon/available', array('BOOTPAY-ROLE: ' . $this->bootpay->userOrSupervisorRole()));
     }
 
     /**
@@ -40,7 +40,7 @@ class CouponModule
      */
     public function download($params)
     {
-        return $this->bootpay->post('coupon/download', $params);
+        return $this->bootpay->post('coupon/download', $params, array('BOOTPAY-ROLE: user'));
     }
 
     private function buildQueryString($params)

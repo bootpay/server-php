@@ -124,7 +124,7 @@ class CommerceWireFormatTest extends TestCase
         $this->assertEquals('webhook/test', $call['url']);
         $this->assertEquals(array('header_content_type' => 1), $call['data']);
         $this->assertNotNull($this->headerValue('Idempotency-Key'));
-        $this->assertNull($this->headerValue('BOOTPAY-ROLE'));
+        $this->assertEquals('supervisor', $this->headerValue('BOOTPAY-ROLE'));
     }
 
     public function testWebhookSendTestWithoutParamsSendsEmptyObjectBody()
@@ -868,5 +868,105 @@ class CommerceWireFormatTest extends TestCase
         $this->assertEquals('store', $this->lastCall()['url']);
         $this->api->store->detail();
         $this->assertEquals('store/detail', $this->lastCall()['url']);
+    }
+
+    // ---------- 엔드포인트별 고정 BOOTPAY-ROLE (인스턴스 역할에 의존하지 않는다) ----------
+
+    /**
+     * [호출 클로저, 기대 규칙] — 규칙: user / supervisor / manager / user_or_supervisor
+     */
+    private function roleCases()
+    {
+        $api = $this->api;
+        return array(
+            'cart.orderPreview' => array(function () use ($api) { $api->cart->orderPreview(array('cart_items' => array())); }, 'user'),
+            'category.getList' => array(function () use ($api) { $api->category->getList(); }, 'user'),
+            'category.detail' => array(function () use ($api) { $api->category->detail('c1'); }, 'user'),
+            'category.destroy' => array(function () use ($api) { $api->category->destroy('c1'); }, 'supervisor'),
+            'coupon.getList' => array(function () use ($api) { $api->coupon->getList(); }, 'user_or_supervisor'),
+            'coupon.available' => array(function () use ($api) { $api->coupon->available(); }, 'user_or_supervisor'),
+            'coupon.download' => array(function () use ($api) { $api->coupon->download(array('coupon_id' => 'cp1')); }, 'user'),
+            'deposit.accounts' => array(function () use ($api) { $api->deposit->accounts(); }, 'supervisor'),
+            'deposit.detail' => array(function () use ($api) { $api->deposit->detail('d1'); }, 'supervisor'),
+            'faq.detail' => array(function () use ($api) { $api->faq->detail(array('faq_id' => 'f1')); }, 'user_or_supervisor'),
+            'notice.detail' => array(function () use ($api) { $api->notice->detail(array('notice_id' => 'n1')); }, 'user_or_supervisor'),
+            'productQna.delete' => array(function () use ($api) { $api->productQna->delete(array('product_qna_id' => 'q1')); }, 'user_or_supervisor'),
+            'invoice.detail' => array(function () use ($api) { $api->invoice->detail('i1'); }, 'user'),
+            'mallSetting.getMallSetting' => array(function () use ($api) { $api->mallSetting->getMallSetting(); }, 'supervisor'),
+            'order.getList' => array(function () use ($api) { $api->order->getList(); }, 'user'),
+            'order.detail' => array(function () use ($api) { $api->order->detail('o1'); }, 'user'),
+            'order.month' => array(function () use ($api) { $api->order->month('g1', '2026-11'); }, 'user'),
+            'order.purchases' => array(function () use ($api) { $api->order->purchases('on1'); }, 'user'),
+            'orderCancel.request' => array(function () use ($api) { $api->orderCancel->request(array('order_id' => 'o1')); }, 'user_or_supervisor'),
+            'orderCancel.getList' => array(function () use ($api) { $api->orderCancel->getList(); }, 'user'),
+            'orderCancel.approve' => array(function () use ($api) { $api->orderCancel->approve(array('order_cancellation_request_id' => 'r1')); }, 'supervisor'),
+            'orderSubscriptionBill.getList' => array(function () use ($api) { $api->orderSubscriptionBill->getList(array('order_subscription_id' => 'os1')); }, 'user_or_supervisor'),
+            'orderSubscriptionBill.detail' => array(function () use ($api) { $api->orderSubscriptionBill->detail('b1'); }, 'user_or_supervisor'),
+            'orderSubscriptionBill.update' => array(function () use ($api) { $api->orderSubscriptionBill->update(array('order_subscription_bill_id' => 'b1')); }, 'supervisor'),
+            'orderSubscriptionRequest.getList' => array(function () use ($api) { $api->orderSubscriptionRequest->getList(); }, 'user_or_supervisor'),
+            'orderSubscriptionRequest.detail' => array(function () use ($api) { $api->orderSubscriptionRequest->detail('h1'); }, 'user_or_supervisor'),
+            'orderSubscriptionRequest.update' => array(function () use ($api) { $api->orderSubscriptionRequest->update(array('order_subscription_request_history_id' => 'h1', 'approval' => 'approve')); }, 'supervisor'),
+            'orderSubscription.getList' => array(function () use ($api) { $api->orderSubscription->getList(); }, 'user'),
+            'orderSubscription.detail' => array(function () use ($api) { $api->orderSubscription->detail('os1'); }, 'user'),
+            'orderSubscription.update' => array(function () use ($api) { $api->orderSubscription->update(array('order_subscription_id' => 'os1', 'price' => 1)); }, 'supervisor'),
+            'orderSubscription.supervisorApprove' => array(function () use ($api) { $api->orderSubscription->supervisorApprove('os1'); }, 'supervisor'),
+            'orderSubscriptionRequestIng.pause' => array(function () use ($api) { $api->orderSubscription->requestIng->pause(array('order_subscription_id' => 'os1')); }, 'user'),
+            'point.balance' => array(function () use ($api) { $api->point->balance(); }, 'user'),
+            'point.transactions' => array(function () use ($api) { $api->point->transactions(); }, 'user'),
+            'product.getList' => array(function () use ($api) { $api->product->getList(); }, 'user'),
+            'product.products' => array(function () use ($api) { $api->product->products(); }, 'user'),
+            'product.detail' => array(function () use ($api) { $api->product->detail('p1'); }, 'user'),
+            'product.delete' => array(function () use ($api) { $api->product->delete('p1'); }, 'user'),
+            'store.getStore' => array(function () use ($api) { $api->store->getStore(); }, 'user'),
+            'store.getStoreDetail' => array(function () use ($api) { $api->store->getStoreDetail(); }, 'user'),
+            'userGroup.create' => array(function () use ($api) { $api->userGroup->create(array('name' => 'g')); }, 'user'),
+            'userGroup.getList' => array(function () use ($api) { $api->userGroup->getList(); }, 'user'),
+            'userGroup.detail' => array(function () use ($api) { $api->userGroup->detail('g1'); }, 'user'),
+            'userGroup.update' => array(function () use ($api) { $api->userGroup->update(array('user_group_id' => 'g1')); }, 'user'),
+            'userGroup.userCreate' => array(function () use ($api) { $api->userGroup->userCreate('g1', 'u1'); }, 'manager'),
+            'userGroup.limit' => array(function () use ($api) { $api->userGroup->limit(array('user_group_id' => 'g1')); }, 'manager'),
+            'user.token' => array(function () use ($api) { $api->user->token('u1'); }, 'user'),
+            'user.join' => array(function () use ($api) { $api->user->join(array('login_id' => 'a')); }, 'user'),
+            'user.checkExist' => array(function () use ($api) { $api->user->checkExist('id-exist', 'a'); }, 'user'),
+            'user.login' => array(function () use ($api) { $api->user->login('a', 'b'); }, 'user'),
+            'user.userSession' => array(function () use ($api) { $api->user->userSession('jwt'); }, 'user'),
+            'user.uidExist' => array(function () use ($api) { $api->user->uidExist('x'); }, 'user'),
+            'user.getList' => array(function () use ($api) { $api->user->getList(); }, 'user'),
+            'user.detail' => array(function () use ($api) { $api->user->detail('u1'); }, 'user'),
+            'user.update' => array(function () use ($api) { $api->user->update(array('user_id' => 'u1')); }, 'user'),
+            'user.delete' => array(function () use ($api) { $api->user->delete('u1'); }, 'user'),
+            'webhook.sendTest' => array(function () use ($api) { $api->webhook->sendTest(); }, 'supervisor'),
+        );
+    }
+
+    private function expectedRole($rule, $instanceRole)
+    {
+        if ($rule === 'user_or_supervisor') {
+            return $instanceRole === 'supervisor' ? 'supervisor' : 'user';
+        }
+        return $rule;
+    }
+
+    public function testFixedRolePerEndpointInManagerAndSupervisorMode()
+    {
+        foreach (array('manager', 'supervisor') as $instanceRole) {
+            $this->api->withRole($instanceRole);
+            foreach ($this->roleCases() as $name => $case) {
+                call_user_func($case[0]);
+                $this->assertSame(
+                    $this->expectedRole($case[1], $instanceRole),
+                    $this->headerValue('BOOTPAY-ROLE'),
+                    $name . ' (instance role: ' . $instanceRole . ')'
+                );
+            }
+        }
+        $this->api->asUser();
+    }
+
+    public function testUserOrSupervisorRoleHelper()
+    {
+        $this->assertSame('user', $this->api->userOrSupervisorRole());
+        $this->assertSame('user', $this->api->asManager()->userOrSupervisorRole());
+        $this->assertSame('supervisor', $this->api->asSupervisor()->userOrSupervisorRole());
     }
 }

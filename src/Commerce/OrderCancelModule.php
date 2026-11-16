@@ -36,7 +36,7 @@ class OrderCancelModule
      */
     public function request($params)
     {
-        return $this->bootpay->post('order/cancel', $params);
+        return $this->bootpay->post('order/cancel', $params, array('BOOTPAY-ROLE: ' . $this->bootpay->userOrSupervisorRole()));
     }
 
     /**

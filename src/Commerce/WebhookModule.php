@@ -28,7 +28,8 @@ class WebhookModule
         unset($payload['idempotency_key']);
 
         return $this->bootpay->post('webhook/test', $this->compact($payload), array(
-            'Idempotency-Key: ' . ($idempotencyKey ?: BootpayCommerceApi::generateIdempotencyKey())
+            'Idempotency-Key: ' . ($idempotencyKey ?: BootpayCommerceApi::generateIdempotencyKey()),
+            'BOOTPAY-ROLE: supervisor'
         ));
     }
 

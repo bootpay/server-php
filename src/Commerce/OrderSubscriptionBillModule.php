@@ -50,7 +50,7 @@ class OrderSubscriptionBillModule
      */
     public function detail($orderSubscriptionBillId)
     {
-        return $this->bootpay->get("order_subscription_bills/{$orderSubscriptionBillId}");
+        return $this->bootpay->get("order_subscription_bills/{$orderSubscriptionBillId}", array('BOOTPAY-ROLE: ' . $this->bootpay->userOrSupervisorRole()));
     }
 
     /**
@@ -65,7 +65,7 @@ class OrderSubscriptionBillModule
             throw new \Exception('order_subscription_bill_id is required');
         }
         $billId = $orderSubscriptionBill['order_subscription_bill_id'];
-        return $this->bootpay->put("order_subscription_bills/{$billId}", $orderSubscriptionBill);
+        return $this->bootpay->put("order_subscription_bills/{$billId}", $orderSubscriptionBill, array('BOOTPAY-ROLE: supervisor'));
     }
 
     /**
@@ -76,7 +76,7 @@ class OrderSubscriptionBillModule
     {
         return array(
             'Idempotency-Key: ' . ($idempotencyKey ?: BootpayCommerceApi::generateIdempotencyKey()),
-            'BOOTPAY-ROLE: user'
+            'BOOTPAY-ROLE: ' . $this->bootpay->userOrSupervisorRole()
         );
     }
 }

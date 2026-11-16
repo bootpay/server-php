@@ -26,7 +26,7 @@ class OrderSubscriptionModule
     public function getList($params = null)
     {
         $queryString = $this->buildQueryString($params);
-        return $this->bootpay->get('order_subscriptions' . $queryString);
+        return $this->bootpay->get('order_subscriptions' . $queryString, array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -36,7 +36,7 @@ class OrderSubscriptionModule
      */
     public function detail($orderSubscriptionId)
     {
-        return $this->bootpay->get("order_subscriptions/{$orderSubscriptionId}");
+        return $this->bootpay->get("order_subscriptions/{$orderSubscriptionId}", array('BOOTPAY-ROLE: user'));
     }
 
     /**

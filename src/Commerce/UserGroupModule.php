@@ -20,7 +20,7 @@ class UserGroupModule
      */
     public function create($userGroup)
     {
-        return $this->bootpay->post('user-groups', $userGroup);
+        return $this->bootpay->post('user-groups', $userGroup, array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -31,7 +31,7 @@ class UserGroupModule
     public function getList($params = null)
     {
         $queryString = $this->buildQueryString($params);
-        return $this->bootpay->get('user-groups' . $queryString);
+        return $this->bootpay->get('user-groups' . $queryString, array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -41,7 +41,7 @@ class UserGroupModule
      */
     public function detail($userGroupId)
     {
-        return $this->bootpay->get("user-groups/{$userGroupId}");
+        return $this->bootpay->get("user-groups/{$userGroupId}", array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -56,7 +56,7 @@ class UserGroupModule
             throw new \Exception('user_group_id is required');
         }
         $userGroupId = $userGroup['user_group_id'];
-        return $this->bootpay->put("user-groups/{$userGroupId}", $userGroup);
+        return $this->bootpay->put("user-groups/{$userGroupId}", $userGroup, array('BOOTPAY-ROLE: user'));
     }
 
     /**

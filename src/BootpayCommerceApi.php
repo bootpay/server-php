@@ -204,6 +204,16 @@ class BootpayCommerceApi
         return $this->withRole('supervisor');
     }
 
+    /**
+     * user_or_supervisor 엔드포인트용 역할: 인스턴스 역할이 supervisor 면 supervisor, 그 밖(manager 포함)은 user.
+     * 26-11-16: manager 로 나가면 401 API_ROLE_NOT_SUPPORT 가 나는 엔드포인트가 이 값을 쓴다.
+     * @return string
+     */
+    public function userOrSupervisorRole()
+    {
+        return $this->role === 'supervisor' ? 'supervisor' : 'user';
+    }
+
     public function clearRole()
     {
         $this->role = 'user';

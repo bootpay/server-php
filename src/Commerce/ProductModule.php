@@ -28,7 +28,7 @@ class ProductModule
     public function getList($params = null)
     {
         $queryString = $this->buildQueryString($params);
-        return $this->bootpay->get('products' . $queryString);
+        return $this->bootpay->get('products' . $queryString, array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -210,7 +210,8 @@ class ProductModule
     private function mallHeaders($userJwt = null, $idempotencyKey = null)
     {
         $headers = array(
-            'Idempotency-Key: ' . ($idempotencyKey ?: BootpayCommerceApi::generateIdempotencyKey())
+            'Idempotency-Key: ' . ($idempotencyKey ?: BootpayCommerceApi::generateIdempotencyKey()),
+            'BOOTPAY-ROLE: user'
         );
         if ($userJwt !== null && $userJwt !== '') {
             $headers[] = 'Bootpay-User-JWT: ' . $userJwt;

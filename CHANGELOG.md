@@ -1,5 +1,14 @@
 ### Unreleased
 
+#### 커머스 엔드포인트별 BOOTPAY-ROLE 고정
+
+- 역할 헤더를 보내지 않던 커머스 메서드가 인스턴스 역할(`asManager()` 등)을 그대로 따라가 `401 API_ROLE_NOT_SUPPORT(-50)` 이 나던 문제를 고쳤다. 이제 서버 규칙대로 엔드포인트마다 역할을 고정한다.
+  - `user`: cart·category 조회·coupon download·order 조회·order cancel 목록·구독 목록/상세·point·product 조회·store·user·user-group 생성/목록/상세/수정
+  - `supervisor`: webhook 테스트·order subscription bill 수정
+  - `user_or_supervisor`(인스턴스 역할이 supervisor 면 supervisor, 그 외 manager 포함은 user): coupon 목록·available, order cancel 요청, 구독 청구 목록/상세, 구독 요청 목록/상세, 구독 수정, faq/notice 상세와 상품문의 삭제의 기본값
+- `BootpayCommerceApi::userOrSupervisorRole()` 추가. 구독 수정(`orderSubscription->update`)은 supervisor 고정이 아니라 이 규칙을 따른다(기존 supervisor 호출자는 그대로, manager 호출자는 user).
+- 규칙표에 없는 엔드포인트(inquiries·reviews 조회 등)는 그대로 둔다.
+
 #### 입금대기 accounts·detail 멱등키 인자 추가
 
 - `deposit->accounts($idempotencyKey = null)`, `deposit->detail($depositId, $idempotencyKey = null)` — 지정한 `Idempotency-Key` 를 보내고 미지정이면 자동 생성한다. 역할은 supervisor 고정 그대로.

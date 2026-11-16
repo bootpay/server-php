@@ -28,6 +28,6 @@ class CartModule
         if ($params === null) {
             $params = array();
         }
-        return $this->bootpay->post('cart/order-preview', $params);
+        return $this->bootpay->post('cart/order-preview', $params, array('BOOTPAY-ROLE: user'));
     }
 }

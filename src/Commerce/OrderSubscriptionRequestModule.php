@@ -144,7 +144,7 @@ class OrderSubscriptionRequestModule
      */
     private function requestHeaders($projectId = null, $idempotencyKey = null)
     {
-        $role = ($projectId !== null && $projectId !== '') ? 'supervisor' : 'user';
+        $role = ($projectId !== null && $projectId !== '') ? 'supervisor' : $this->bootpay->userOrSupervisorRole();
         return array(
             'Idempotency-Key: ' . ($idempotencyKey ?: BootpayCommerceApi::generateIdempotencyKey()),
             'BOOTPAY-ROLE: ' . $role

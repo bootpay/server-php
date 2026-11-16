@@ -19,7 +19,7 @@ class CategoryModule
      */
     public function getList()
     {
-        return $this->bootpay->get('categories');
+        return $this->bootpay->get('categories', array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -29,7 +29,7 @@ class CategoryModule
      */
     public function detail($categoryId)
     {
-        return $this->bootpay->get("categories/{$categoryId}");
+        return $this->bootpay->get("categories/{$categoryId}", array('BOOTPAY-ROLE: user'));
     }
 
     /**

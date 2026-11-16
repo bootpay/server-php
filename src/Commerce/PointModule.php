@@ -19,7 +19,7 @@ class PointModule
      */
     public function balance()
     {
-        return $this->bootpay->get('point/balance');
+        return $this->bootpay->get('point/balance', array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -30,7 +30,7 @@ class PointModule
     public function transactions($params = null)
     {
         $queryString = $this->buildQueryString($params);
-        return $this->bootpay->get('point/transactions' . $queryString);
+        return $this->bootpay->get('point/transactions' . $queryString, array('BOOTPAY-ROLE: user'));
     }
 
     private function buildQueryString($params)

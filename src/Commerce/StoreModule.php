@@ -62,7 +62,8 @@ class StoreModule
     private function storeHeaders($idempotencyKey = null)
     {
         return array(
-            'Idempotency-Key: ' . ($idempotencyKey ?: BootpayCommerceApi::generateIdempotencyKey())
+            'Idempotency-Key: ' . ($idempotencyKey ?: BootpayCommerceApi::generateIdempotencyKey()),
+            'BOOTPAY-ROLE: user'
         );
     }
 }

@@ -20,7 +20,7 @@ class UserModule
      */
     public function token($userId)
     {
-        return $this->bootpay->post('users/login/token', array('user_id' => $userId));
+        return $this->bootpay->post('users/login/token', array('user_id' => $userId), array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -30,7 +30,7 @@ class UserModule
      */
     public function join($user)
     {
-        return $this->bootpay->post('users/join', $user);
+        return $this->bootpay->post('users/join', $user, array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -42,7 +42,7 @@ class UserModule
     public function checkExist($key, $value)
     {
         $encodedValue = urlencode($value);
-        return $this->bootpay->get("users/join/{$key}?pk={$encodedValue}");
+        return $this->bootpay->get("users/join/{$key}?pk={$encodedValue}", array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -67,7 +67,7 @@ class UserModule
         return $this->bootpay->post('users/login', array(
             'login_id' => $loginId,
             'login_pw' => $loginPw
-        ));
+        ), array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -160,9 +160,7 @@ class UserModule
     public function uidExist($uid, $idempotencyKey = null)
     {
         $encodedUid = urlencode($uid);
-        $headers = $this->mallHeaders(null, $idempotencyKey);
-        $headers[] = 'BOOTPAY-ROLE: user';
-        return $this->bootpay->get("users/join/uid-exist?pk={$encodedUid}", $headers);
+        return $this->bootpay->get("users/join/uid-exist?pk={$encodedUid}", $this->mallHeaders(null, $idempotencyKey));
     }
 
     /**
@@ -181,9 +179,7 @@ class UserModule
         if ($verificationContext !== null) {
             $url .= '?' . http_build_query(array('verification_context' => $verificationContext));
         }
-        $headers = $this->mallHeaders(null, $idempotencyKey);
-        $headers[] = 'BOOTPAY-ROLE: user';
-        return $this->bootpay->get($url, $headers);
+        return $this->bootpay->get($url, $this->mallHeaders(null, $idempotencyKey));
     }
 
     /**
@@ -198,7 +194,7 @@ class UserModule
     public function getList($params = null)
     {
         $queryString = $this->buildQueryString($params);
-        return $this->bootpay->get('users' . $queryString);
+        return $this->bootpay->get('users' . $queryString, array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -208,7 +204,7 @@ class UserModule
      */
     public function detail($userId)
     {
-        return $this->bootpay->get("users/{$userId}");
+        return $this->bootpay->get("users/{$userId}", array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -223,7 +219,7 @@ class UserModule
             throw new \Exception('user_id is required');
         }
         $userId = $user['user_id'];
-        return $this->bootpay->put("users/{$userId}", $user);
+        return $this->bootpay->put("users/{$userId}", $user, array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -233,7 +229,7 @@ class UserModule
      */
     public function delete($userId)
     {
-        return $this->bootpay->delete("users/{$userId}");
+        return $this->bootpay->delete("users/{$userId}", array('BOOTPAY-ROLE: user'));
     }
 
     /**
@@ -258,7 +254,8 @@ class UserModule
     private function mallHeaders($userJwt = null, $idempotencyKey = null)
     {
         $headers = array(
-            'Idempotency-Key: ' . ($idempotencyKey ?: BootpayCommerceApi::generateIdempotencyKey())
+            'Idempotency-Key: ' . ($idempotencyKey ?: BootpayCommerceApi::generateIdempotencyKey()),
+            'BOOTPAY-ROLE: user'
         );
         if ($userJwt !== null && $userJwt !== '') {
             $headers[] = 'Bootpay-User-JWT: ' . $userJwt;
