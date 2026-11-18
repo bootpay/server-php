@@ -127,7 +127,7 @@ class ProductQnaModule
 
         return $this->bootpay->delete(
             "product-qnas/{$productQnaId}",
-            $this->headers($params, (isset($params['supervisor']) && $params['supervisor']) ? 'supervisor' : $this->bootpay->userOrSupervisorRole()),
+            $this->headers($params),
             $payload
         );
     }

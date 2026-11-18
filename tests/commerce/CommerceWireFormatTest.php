@@ -888,9 +888,9 @@ class CommerceWireFormatTest extends TestCase
             'coupon.download' => array(function () use ($api) { $api->coupon->download(array('coupon_id' => 'cp1')); }, 'user'),
             'deposit.accounts' => array(function () use ($api) { $api->deposit->accounts(); }, 'supervisor'),
             'deposit.detail' => array(function () use ($api) { $api->deposit->detail('d1'); }, 'supervisor'),
-            'faq.detail' => array(function () use ($api) { $api->faq->detail(array('faq_id' => 'f1')); }, 'user_or_supervisor'),
-            'notice.detail' => array(function () use ($api) { $api->notice->detail(array('notice_id' => 'n1')); }, 'user_or_supervisor'),
-            'productQna.delete' => array(function () use ($api) { $api->productQna->delete(array('product_qna_id' => 'q1')); }, 'user_or_supervisor'),
+            'faq.detail' => array(function () use ($api) { $api->faq->detail(array('faq_id' => 'f1')); }, 'user'),
+            'notice.detail' => array(function () use ($api) { $api->notice->detail(array('notice_id' => 'n1')); }, 'user'),
+            'productQna.delete' => array(function () use ($api) { $api->productQna->delete(array('product_qna_id' => 'q1')); }, 'user'),
             'invoice.detail' => array(function () use ($api) { $api->invoice->detail('i1'); }, 'user'),
             'mallSetting.getMallSetting' => array(function () use ($api) { $api->mallSetting->getMallSetting(); }, 'supervisor'),
             'order.getList' => array(function () use ($api) { $api->order->getList(); }, 'user'),
@@ -900,11 +900,11 @@ class CommerceWireFormatTest extends TestCase
             'orderCancel.request' => array(function () use ($api) { $api->orderCancel->request(array('order_id' => 'o1')); }, 'user_or_supervisor'),
             'orderCancel.getList' => array(function () use ($api) { $api->orderCancel->getList(); }, 'user'),
             'orderCancel.approve' => array(function () use ($api) { $api->orderCancel->approve(array('order_cancellation_request_id' => 'r1')); }, 'supervisor'),
-            'orderSubscriptionBill.getList' => array(function () use ($api) { $api->orderSubscriptionBill->getList(array('order_subscription_id' => 'os1')); }, 'user_or_supervisor'),
+            'orderSubscriptionBill.getList' => array(function () use ($api) { $api->orderSubscriptionBill->getList(array('order_subscription_id' => 'os1')); }, 'user'),
             'orderSubscriptionBill.detail' => array(function () use ($api) { $api->orderSubscriptionBill->detail('b1'); }, 'user_or_supervisor'),
             'orderSubscriptionBill.update' => array(function () use ($api) { $api->orderSubscriptionBill->update(array('order_subscription_bill_id' => 'b1')); }, 'supervisor'),
-            'orderSubscriptionRequest.getList' => array(function () use ($api) { $api->orderSubscriptionRequest->getList(); }, 'user_or_supervisor'),
-            'orderSubscriptionRequest.detail' => array(function () use ($api) { $api->orderSubscriptionRequest->detail('h1'); }, 'user_or_supervisor'),
+            'orderSubscriptionRequest.getList' => array(function () use ($api) { $api->orderSubscriptionRequest->getList(); }, 'user'),
+            'orderSubscriptionRequest.detail' => array(function () use ($api) { $api->orderSubscriptionRequest->detail('h1'); }, 'user'),
             'orderSubscriptionRequest.update' => array(function () use ($api) { $api->orderSubscriptionRequest->update(array('order_subscription_request_history_id' => 'h1', 'approval' => 'approve')); }, 'supervisor'),
             'orderSubscription.getList' => array(function () use ($api) { $api->orderSubscription->getList(); }, 'user'),
             'orderSubscription.detail' => array(function () use ($api) { $api->orderSubscription->detail('os1'); }, 'user'),
@@ -973,5 +973,23 @@ class CommerceWireFormatTest extends TestCase
         $this->assertSame('user', $this->api->userOrSupervisorRole());
         $this->assertSame('user', $this->api->asManager()->userOrSupervisorRole());
         $this->assertSame('supervisor', $this->api->asSupervisor()->userOrSupervisorRole());
+    }
+
+    public function testExplicitSupervisorFalseWinsOverSupervisorInstance()
+    {
+        $this->api->asSupervisor();
+        $this->api->faq->detail(array('faq_id' => 'f1', 'supervisor' => false));
+        $this->assertSame('user', $this->headerValue('BOOTPAY-ROLE'), 'faq.detail');
+        $this->api->notice->detail(array('notice_id' => 'n1', 'supervisor' => false));
+        $this->assertSame('user', $this->headerValue('BOOTPAY-ROLE'), 'notice.detail');
+        $this->api->productQna->delete(array('product_qna_id' => 'q1', 'supervisor' => false));
+        $this->assertSame('user', $this->headerValue('BOOTPAY-ROLE'), 'productQna.delete');
+
+        // 생략해도 user — 기존 동작 유지 (supervisor => true 일 때만 supervisor)
+        $this->api->faq->detail(array('faq_id' => 'f1'));
+        $this->assertSame('user', $this->headerValue('BOOTPAY-ROLE'), 'faq.detail (omitted)');
+        $this->api->faq->detail(array('faq_id' => 'f1', 'supervisor' => true));
+        $this->assertSame('supervisor', $this->headerValue('BOOTPAY-ROLE'), 'faq.detail (true)');
+        $this->api->asUser();
     }
 }

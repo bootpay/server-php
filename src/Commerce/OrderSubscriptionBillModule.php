@@ -76,7 +76,7 @@ class OrderSubscriptionBillModule
     {
         return array(
             'Idempotency-Key: ' . ($idempotencyKey ?: BootpayCommerceApi::generateIdempotencyKey()),
-            'BOOTPAY-ROLE: ' . $this->bootpay->userOrSupervisorRole()
+            'BOOTPAY-ROLE: user'
         );
     }
 }

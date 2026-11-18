@@ -54,7 +54,7 @@ class NoticeModule
         $params = $this->normalize($params, 'notice_id');
         $noticeId = $this->requireValue($params, 'notice_id');
 
-        return $this->bootpay->get("notices/{$noticeId}", $this->headers($params, (isset($params['supervisor']) && $params['supervisor']) ? 'supervisor' : $this->bootpay->userOrSupervisorRole()));
+        return $this->bootpay->get("notices/{$noticeId}", $this->headers($params));
     }
 
     /**
